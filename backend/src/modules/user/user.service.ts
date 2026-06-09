@@ -11,11 +11,21 @@ export class UserService {
     return this.prismaService.user.findUnique({ where: { email } })
   }
 
-  async create(email: string, password: string) {
+  async create(email: string, password: string, username: string) {
     const hashedPassword = await hash(password)
 
     return await this.prismaService.user.create({
-      data: { email, password: hashedPassword },
+      data: {
+        email,
+        password: hashedPassword,
+        username,
+        stream: {
+          create: {
+            title: `${username}'s stream`,
+            category: 'Just Chatting',
+          },
+        },
+      },
     })
   }
 }

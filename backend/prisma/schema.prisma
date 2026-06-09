@@ -9,7 +9,62 @@ datasource db {
 }
 
 model User {
-  id       String @id @default(cuid(2))
-  email    String @unique
-  password String
+  id        String   @id @default(cuid(2))
+  username  String   @unique
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stream   Stream?
+  messages Message[]
+}
+
+model Stream {
+  id        String   @id @default(cuid(2))
+  title     String
+  category  String?
+  tags      String[] @default([])
+  isLive    Boolean  @default(false)
+  streamKey String?
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  broadcasts Broadcast[]
+  messages   Message[]
+}
+
+model Broadcast {
+  id        String    @id @default(cuid(2))
+  title     String
+  category  String?
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
+  videoUrl  String?
+
+  streamId String
+  stream   Stream @relation(fields: [streamId], references: [id], onDelete: Cascade)
+
+  messages Message[]
+
+  @@index([streamId])
+}
+
+model Message {
+  id        String   @id @default(cuid(2))
+  text      String
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  streamId String
+  stream   Stream @relation(fields: [streamId], references: [id], onDelete: Cascade)
+
+  broadcastId String?
+  broadcast   Broadcast? @relation(fields: [broadcastId], references: [id], onDelete: Cascade)
+
+  @@index([streamId])
+  @@index([broadcastId])
 }

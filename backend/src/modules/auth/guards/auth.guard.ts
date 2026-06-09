@@ -8,12 +8,13 @@ import { IS_PUBLIC_KEY } from '../decorators/public.decorator'
 import { GqlContext } from '../interfaces/auth-context.interface'
 import { AuthPayload } from '../interfaces/auth-payload.interface'
 import { type Request } from 'express'
+import { EnvConfig } from '~/config/env.config'
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService<EnvConfig>,
     private readonly jwtService: JwtService,
   ) {}
 

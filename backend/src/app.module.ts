@@ -5,6 +5,7 @@ import { APP_GUARD } from '@nestjs/core'
 import { GraphQLModule } from '@nestjs/graphql'
 import { JwtModule } from '@nestjs/jwt'
 
+import envConfig from './config/env.config'
 import { AuthModule } from './modules/auth/auth.module'
 import { AuthGuard } from './modules/auth/guards/auth.guard'
 import { RedisModule } from './modules/redis/redis.module'
@@ -14,7 +15,11 @@ import { join } from 'path'
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [envConfig],
+      envFilePath: '.env',
+    }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),

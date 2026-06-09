@@ -1,5 +1,5 @@
 import { AuthPayload } from './auth-payload.interface'
-import { Request } from 'express'
+import { Request, Response } from 'express'
 
 export interface AuthenticatedRequest extends Request {
   user?: AuthPayload
@@ -7,4 +7,5 @@ export interface AuthenticatedRequest extends Request {
 
 export interface GqlContext {
   req: AuthenticatedRequest
+  res: Response
 }

@@ -6,40 +6,37 @@ import { RedisService } from '../redis/redis.service'
 import { UserService } from '../user/user.service'
 import { LoginInput } from './dto/login.input'
 import { RegisterInput } from './dto/register.input'
-import { AuthResponse } from './entities/auth-response.entity'
-import { RefreshResponse } from './entities/refresh-response.entity'
-import { AuthPayload } from './interfaces/auth-payload.interface'
 import { verify } from 'argon2'
-import { StringValue } from 'ms'
+import ms, { StringValue } from 'ms'
+import { createHash, randomBytes } from 'node:crypto'
+import { EnvConfig } from '~/config/env.config'
 
 @Injectable()
 export class AuthService {
-  private readonly REFRESH_TOKEN_TTL = 7 * 24 * 60 * 60
-
   constructor(
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService<EnvConfig>,
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly redisService: RedisService,
   ) {}
 
-  async register(input: RegisterInput): Promise<AuthResponse> {
+  async register(input: RegisterInput) {
     const isExist = await this.userService.findByEmail(input.email)
 
     if (isExist) {
       throw new BadRequestException('User already exists')
     }
 
-    const newUser = await this.userService.create(input.email, input.password)
-
-    const tokens = await this.signTokens(newUser.id, newUser.email)
+    const newUser = await this.userService.create(input.email, input.password, input.username)
 
     const { password, ...safeUser } = newUser
+
+    const tokens = await this.signTokens(newUser.id, newUser.email)
 
     return { user: safeUser, ...tokens }
   }
 
-  async login(input: LoginInput): Promise<AuthResponse> {
+  async login(input: LoginInput) {
     const user = await this.userService.findByEmail(input.email)
 
     if (!user) {
@@ -53,34 +50,36 @@ export class AuthService {
     }
 
     const { password, ...safeUser } = user
-
     const tokens = await this.signTokens(user.id, user.email)
 
     return { user: safeUser, ...tokens }
   }
 
-  async refresh(refreshToken: string): Promise<RefreshResponse> {
-    let payload: AuthPayload | null = null
+  async logout(refreshToken: string): Promise<boolean> {
+    const tokenHash = createHash('sha256').update(refreshToken).digest('hex')
+    await this.redisService.del(`refresh:${tokenHash}`)
+    return true
+  }
 
-    try {
-      payload = await this.jwtService.verifyAsync<AuthPayload>(refreshToken, {
-        secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
-      })
-    } catch {
+  async refresh(refreshToken: string) {
+    const tokenHash = createHash('sha256').update(refreshToken).digest('hex')
+    const data = await this.redisService.get(`refresh:${tokenHash}`)
+
+    if (!data) {
       throw new UnauthorizedException('Invalid or expired refresh token')
     }
 
-    const savedToken = await this.redisService.get(`user:refresh:${payload.sub}`)
+    const { userId, email } = JSON.parse(data) as { userId: string; email: string }
 
-    if (!savedToken || savedToken !== refreshToken) {
-      throw new UnauthorizedException('Invalid or expired refresh token')
-    }
+    await this.redisService.del(`refresh:${tokenHash}`)
 
-    return await this.signTokens(payload.sub, payload.email)
+    return this.signTokens(userId, email)
   }
 
   private async signTokens(userId: string, email: string) {
-    const [accessToken, refreshToken] = await Promise.all([
+    const refreshToken = randomBytes(32).toString('hex')
+
+    const [accessToken] = await Promise.all([
       this.jwtService.signAsync(
         { sub: userId, email },
         {
@@ -88,21 +87,22 @@ export class AuthService {
           expiresIn: this.configService.getOrThrow<StringValue>('JWT_ACCESS_TTL'),
         },
       ),
-      this.jwtService.signAsync(
-        { sub: userId, email },
-        {
-          secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
-          expiresIn: this.configService.getOrThrow<StringValue>('JWT_REFRESH_TTL'),
-        },
-      ),
+      this.saveRefreshToken(userId, email, refreshToken),
     ])
-
-    await this.saveRefreshToken(userId, refreshToken)
 
     return { accessToken, refreshToken }
   }
 
-  private async saveRefreshToken(userId: string, refreshToken: string) {
-    await this.redisService.setex(`user:refresh:${userId}`, this.REFRESH_TOKEN_TTL, refreshToken)
+  private async saveRefreshToken(userId: string, email: string, refreshToken: string) {
+    const tokenHash = createHash('sha256').update(refreshToken).digest('hex')
+    const ttl = this.configService.getOrThrow<string>('JWT_REFRESH_TTL')
+    const seconds = ms(ttl as StringValue) / 1000
+
+    await this.redisService.set(
+      `refresh:${tokenHash}`,
+      JSON.stringify({ userId, email }),
+      'EX',
+      seconds,
+    )
   }
 }
