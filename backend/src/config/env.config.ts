@@ -32,20 +32,7 @@ const envSchema = z.object({
 export type EnvConfig = z.infer<typeof envSchema>
 
 export default registerAs('app', () => {
-  const env = envSchema.parse(process.env)
+  envSchema.parse(process.env)
 
-  return {
-    nodeEnv: env.NODE_ENV,
-    port: env.PORT,
-    origin: env.ORIGIN,
-
-    databaseUrl: env.DATABASE_URL,
-    redisUrl: env.REDIS_URL,
-
-    cookieSecret: env.COOKIE_SECRET,
-
-    jwtAccessSecret: env.JWT_ACCESS_SECRET,
-    jwtAccessTtl: ms(env.JWT_ACCESS_TTL as StringValue),
-    jwtRefreshTtl: ms(env.JWT_REFRESH_TTL as StringValue),
-  }
+  return {}
 })

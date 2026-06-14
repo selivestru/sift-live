@@ -12,6 +12,7 @@ import { RedisModule } from './modules/redis/redis.module'
 import { UserModule } from './modules/user/user.module'
 import { PrismaModule } from './prisma/prisma.module'
 import { join } from 'path'
+import { StreamModule } from './modules/stream/stream.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { join } from 'path'
     AuthModule,
     UserModule,
     RedisModule,
+    StreamModule,
   ],
   controllers: [],
   providers: [
