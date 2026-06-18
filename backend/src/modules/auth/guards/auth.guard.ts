@@ -5,8 +5,8 @@ import { GqlExecutionContext } from '@nestjs/graphql'
 import { JwtService } from '@nestjs/jwt'
 
 import { AuthPayload } from '../../../common/interfaces/auth-payload.interface'
-import { IS_PUBLIC_KEY } from '../decorators/public.decorator'
 import { type Request } from 'express'
+import { IS_PUBLIC_KEY } from '~/common/decorators/public.decorator'
 import { GqlContext } from '~/common/interfaces/gql-context.interface'
 import { EnvConfig } from '~/config/env.config'
 

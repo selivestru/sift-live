@@ -5,6 +5,7 @@ import { APP_GUARD } from '@nestjs/core'
 import { GraphQLModule } from '@nestjs/graphql'
 import { JwtModule } from '@nestjs/jwt'
 
+import { AppResolver } from './app.resolver'
 import { GqlContext } from './common/interfaces/gql-context.interface'
 import envConfig from './config/env.config'
 import { AuthModule } from './modules/auth/auth.module'
@@ -30,14 +31,6 @@ import { join } from 'path'
       context: ({ req, res }: GqlContext) => ({ req, res }),
     }),
     JwtModule.register({ global: true }),
-    // ThrottlerModule.forRootAsync({
-    //   imports: [ConfigService],
-    //   inject: [ConfigService],
-    //   useFactory: (configService: ConfigService<EnvConfig>) => ({
-    //     ttl: configService.getOrThrow<string>('THROTTLE_TTL'),
-    //     limit: configService.getOrThrow<number>('THROTTLE_LIMIT'),
-    //   }),
-    // }),
     PrismaModule,
     AuthModule,
     UserModule,
@@ -46,7 +39,7 @@ import { join } from 'path'
   ],
   controllers: [],
   providers: [
-    // s
+    AppResolver,
     {
       provide: APP_GUARD,
       useClass: AuthGuard,

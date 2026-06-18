@@ -19,7 +19,16 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+
+    /* Paths */
+    "paths": {
+      "~/widgets/*": ["./src/widgets/*"],
+      "~/features/*": ["./src/features/*"],
+      "~/entities/*": ["./src/entities/*"],
+      "~/shared/*": ["./src/shared/*"],
+      "~/*": ["./src/*"]
+    }
   },
   "include": ["src"]
 }
