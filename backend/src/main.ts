@@ -4,6 +4,7 @@ import { NestFactory } from '@nestjs/core'
 
 import { AppModule } from './app.module'
 import type { EnvConfig } from './config/env.config'
+import { SocketIoAdapter } from './modules/socket/socket-io.adapter'
 import cookieParser from 'cookie-parser'
 
 async function bootstrap() {
@@ -28,6 +29,8 @@ async function bootstrap() {
       transform: true,
     }),
   )
+
+  app.useWebSocketAdapter(new SocketIoAdapter(app, configService))
 
   const port = configService.getOrThrow<string>('PORT')
 

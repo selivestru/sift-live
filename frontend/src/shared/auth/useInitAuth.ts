@@ -11,6 +11,8 @@ export const useInitAuth = () => {
   const setLoading = useAuthStore((s) => s.setLoading)
   const logout = useAuthStore((s) => s.logout)
 
+  const isLoading = useAuthStore((s) => s.isLoading)
+
   useEffect(() => {
     if (initAttempted) return
     initAttempted = true
@@ -38,4 +40,6 @@ export const useInitAuth = () => {
 
     void init()
   }, [setLoading, logout, setUser])
+
+  return { isLoading }
 }

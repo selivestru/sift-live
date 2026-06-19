@@ -1,13 +1,15 @@
 import { authExchange } from '@urql/exchange-auth'
-import { cacheExchange, createClient, fetchExchange } from 'urql'
+import { cacheExchange } from '@urql/exchange-graphcache'
+import { createClient, fetchExchange } from 'urql'
 import z from 'zod'
 
 import { REFRESH_MUTATION } from '~/shared/auth/api/refresh'
 import { useAuthStore } from '~/shared/auth/auth.store'
+import { env } from '~/shared/config/env'
 import { ACCESS_TOKEN_KEY, getStorageItem, setStorageItem } from '~/shared/lib/storage'
 
 export const client = createClient({
-  url: 'http://localhost:5000/graphql',
+  url: `${env.VITE_API_URL}/graphql`,
   fetchOptions: {
     credentials: 'include',
     headers: {
@@ -15,7 +17,7 @@ export const client = createClient({
     },
   },
   exchanges: [
-    cacheExchange,
+    cacheExchange(),
     authExchange(async (utils) => {
       return {
         addAuthToOperation(operation) {
@@ -52,6 +54,7 @@ export const client = createClient({
           if (result.data?.refresh?.accessToken) {
             token = result.data.refresh.accessToken
             setStorageItem('accessToken', token)
+            useAuthStore.getState().setToken(token!)
           } else {
             useAuthStore.getState().logout()
           }

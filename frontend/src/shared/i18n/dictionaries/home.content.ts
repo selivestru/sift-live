@@ -3,30 +3,35 @@ import { t, type Dictionary } from 'intlayer'
 const homeContent = {
   key: 'home',
   content: {
-    welcome: t({
-      en: 'Welcome to',
-      uk: 'Ласкаво просимо до',
-      ru: 'Добро пожаловать в',
+    recommendedForYou: t({
+      en: 'Recommended for you',
+      uk: 'Рекомендовані для вас',
+      ru: 'Рекомендуем для вас',
     }),
-    brandName: t({
-      en: 'Sift Live',
-      uk: 'Sift Live',
-      ru: 'Sift Live',
+    refresh: t({
+      en: 'Refresh',
+      uk: 'Оновити',
+      ru: 'Обновить',
     }),
-    subtitle: t({
-      en: 'Discover, watch, and share live streams. Join the community and start streaming today.',
-      uk: 'Відкривайте, дивіться та діліться прямими ефірами. Приєднуйтесь до спільноти й починайте транслювати вже сьогодні.',
-      ru: 'Открывайте, смотрите и делитесь прямыми эфирами. Присоединяйтесь к сообществу и начинайте транслировать уже сегодня.',
+    live: t({
+      en: 'Live',
+      uk: 'В ефірі',
+      ru: 'В эфире',
     }),
-    browseStreams: t({
-      en: 'Browse Streams',
-      uk: 'Переглянути стріми',
-      ru: 'Смотреть стримы',
+    viewers: t({
+      en: 'viewers',
+      uk: 'глядачів',
+      ru: 'зрителей',
     }),
-    goLive: t({
-      en: 'Go Live',
-      uk: 'Розпочати стрім',
-      ru: 'Начать стрим',
+    noResults: t({
+      en: 'No streams match your filters',
+      uk: 'Жоден стрім не відповідає фільтрам',
+      ru: 'Ни один стрим не подходит под фильтры',
+    }),
+    browseChannels: t({
+      en: 'Browse all channels',
+      uk: 'Переглянути всі канали',
+      ru: 'Смотреть все каналы',
     }),
   },
 } satisfies Dictionary

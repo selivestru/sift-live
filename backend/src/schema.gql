@@ -7,19 +7,34 @@ type AuthResponse {
   user: User!
 }
 
+type Channel {
+  category: String
+  id: ID!
+  isFollowing: Boolean!
+  isLive: Boolean!
+  tags: [String!]
+  title: String!
+  userId: String!
+}
+
 input LoginInput {
   email: String!
   password: String!
 }
 
 type Mutation {
+  followChannel(channelId: String!): Channel!
   login(input: LoginInput!): AuthResponse!
   logout: Boolean!
   refresh: RefreshResponse!
   register(input: RegisterInput!): AuthResponse!
+  unfollowChannel(channelId: String!): Channel!
 }
 
 type Query {
+  channel(username: String!): Channel!
+  followedChannels: [Channel!]!
+  liveChannels: [Channel!]!
   me: User!
   public: String!
 }
@@ -36,6 +51,6 @@ input RegisterInput {
 
 type User {
   email: String!
-  id: String!
+  id: ID!
   username: String!
 }

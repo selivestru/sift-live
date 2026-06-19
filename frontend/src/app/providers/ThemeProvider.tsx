@@ -1,10 +1,13 @@
 import { createContext, use, useEffect, useState } from 'react'
+import { z } from 'zod'
 
-import { setStorageItem } from '~/shared/lib/storage'
+import { getStorageItem, setStorageItem } from '~/shared/lib/storage'
 
 const STORAGE_KEY = 'ui-theme'
 
 type Theme = 'light' | 'dark' | 'system'
+
+const themeSchema = z.enum(['light', 'dark', 'system'])
 
 interface ThemeProviderState {
   theme: Theme
@@ -15,10 +18,9 @@ interface ThemeProviderState {
 const ThemeProviderContext = createContext<ThemeProviderState | undefined>(undefined)
 
 export const ThemeProvider = ({ children }: React.PropsWithChildren) => {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as Theme | null
-    return stored ?? 'system'
-  })
+  const [theme, setThemeState] = useState<Theme>(() =>
+    getStorageItem(STORAGE_KEY, themeSchema, 'system'),
+  )
 
   const setTheme = (newTheme: Theme) => {
     setStorageItem(STORAGE_KEY, newTheme)

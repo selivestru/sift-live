@@ -65,5 +65,5 @@ export default defineConfig({
   env: {
     browser: true,
   },
-  ignorePatterns: ['dist', 'node_modules', 'src/app/routeTree.gen.ts'],
+  ignorePatterns: ['dist', 'node_modules', 'src/app/routeTree.gen.ts', '.agents'],
 })

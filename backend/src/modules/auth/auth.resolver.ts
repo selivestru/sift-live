@@ -25,13 +25,7 @@ export class AuthResolver {
   ) {}
 
   @Query(() => User)
-  async me(@Context() ctx: GqlContext): Promise<User> {
-    await new Promise<void>((resolve) => {
-      setTimeout(() => {
-        resolve()
-      }, 5000)
-    })
-
+  me(@Context() ctx: GqlContext): Promise<User> {
     return this.authService.getCurrentUser(ctx.req.user!.sub)
   }
 

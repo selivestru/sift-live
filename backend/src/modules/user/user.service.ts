@@ -27,9 +27,9 @@ export class UserService {
         email,
         password: hashedPassword,
         username,
-        stream: {
+        channel: {
           create: {
-            title: `${username}'s stream`,
+            title: `${username}'s channel`,
             category: 'Just Chatting',
           },
         },

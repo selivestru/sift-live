@@ -16,5 +16,5 @@ export default defineConfig({
   sortImports: true,
   sortTailwindcss: true,
   sortPackageJson: true,
-  ignorePatterns: ['src/app/routeTree.gen.ts', 'src/shared/api/graphql/__generated__/'],
+  ignorePatterns: ['src/app/routeTree.gen.ts', 'src/shared/api/graphql/__generated__/', '.agents'],
 })

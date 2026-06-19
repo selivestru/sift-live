@@ -10,8 +10,9 @@ import { GqlContext } from './common/interfaces/gql-context.interface'
 import envConfig from './config/env.config'
 import { AuthModule } from './modules/auth/auth.module'
 import { AuthGuard } from './modules/auth/guards/auth.guard'
+import { ChannelModule } from './modules/channel/channel.module'
 import { RedisModule } from './modules/redis/redis.module'
-import { StreamModule } from './modules/stream/stream.module'
+import { SocketModule } from './modules/socket/socket.module'
 import { UserModule } from './modules/user/user.module'
 import { PrismaModule } from './prisma/prisma.module'
 import { join } from 'path'
@@ -35,7 +36,8 @@ import { join } from 'path'
     AuthModule,
     UserModule,
     RedisModule,
-    StreamModule,
+    ChannelModule,
+    SocketModule,
   ],
   controllers: [],
   providers: [

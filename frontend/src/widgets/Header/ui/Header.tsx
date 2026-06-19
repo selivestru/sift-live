@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router'
 import {
   LogInIcon,
   LogOutIcon,
@@ -6,12 +7,11 @@ import {
   UserRoundIcon,
   UserRoundXIcon,
 } from 'lucide-react'
-import { useState } from 'react'
 import { useIntlayer, useLocale } from 'react-intlayer'
 
 import { useTheme } from '~/app/providers/ThemeProvider'
 import { LoginForm, RegisterForm } from '~/features/auth'
-import { useAuthStore, useLogout } from '~/shared/auth'
+import { useAuthDialog, useAuthStore, useLogout } from '~/shared/auth'
 import { Button } from '~/shared/ui/Button'
 import { Dialog, DialogContent, DialogTitle } from '~/shared/ui/Dialog'
 import {
@@ -35,35 +35,40 @@ export const Header = () => {
   const t = useIntlayer('header')
   const { locale, setLocale } = useLocale()
 
-  const [loginOpen, setLoginOpen] = useState(false)
-  const [registerOpen, setRegisterOpen] = useState(false)
+  const dialog = useAuthDialog()
 
   return (
     <header className="bg-background/80 sticky top-0 z-50 border-b backdrop-blur-lg">
       <div className="mx-auto flex h-14 items-center justify-between px-4">
-        <TvIcon className="text-primary size-6" />
+        <Link to="/">
+          <TvIcon className="text-primary size-6" />
+        </Link>
 
-        <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
+        <Dialog
+          open={dialog.isOpen && dialog.mode === 'login'}
+          onOpenChange={(open) => {
+            if (!open) dialog.close()
+          }}
+        >
           <DialogTitle className="sr-only">{t.signInDialogTitle}</DialogTitle>
           <DialogContent>
             <LoginForm
-              onSuccess={() => setLoginOpen(false)}
-              onSwitchToRegister={() => {
-                setLoginOpen(false)
-                setRegisterOpen(true)
-              }}
+              onSuccess={dialog.close}
+              onSwitchToRegister={() => dialog.setMode('register')}
             />
           </DialogContent>
         </Dialog>
-        <Dialog open={registerOpen} onOpenChange={setRegisterOpen}>
+        <Dialog
+          open={dialog.isOpen && dialog.mode === 'register'}
+          onOpenChange={(open) => {
+            if (!open) dialog.close()
+          }}
+        >
           <DialogTitle className="sr-only">{t.createAccountDialogTitle}</DialogTitle>
           <DialogContent>
             <RegisterForm
-              onSuccess={() => setRegisterOpen(false)}
-              onSwitchToLogin={() => {
-                setRegisterOpen(false)
-                setLoginOpen(true)
-              }}
+              onSuccess={dialog.close}
+              onSwitchToLogin={() => dialog.setMode('login')}
             />
           </DialogContent>
         </Dialog>
@@ -116,12 +121,18 @@ export const Header = () => {
               <DropdownMenuSeparator />
 
               {isAuthenticated ? (
-                <DropdownMenuItem onClick={logout}>
-                  <LogOutIcon />
-                  {t.signOut}
-                </DropdownMenuItem>
+                <>
+                  <DropdownMenuItem render={<Link to="/profile/account" />}>
+                    <UserRoundIcon />
+                    {t.profile}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={logout}>
+                    <LogOutIcon />
+                    {t.signOut}
+                  </DropdownMenuItem>
+                </>
               ) : (
-                <DropdownMenuItem onClick={() => setLoginOpen(true)}>
+                <DropdownMenuItem onClick={() => dialog.open('login')}>
                   <LogInIcon />
                   {t.signIn}
                 </DropdownMenuItem>

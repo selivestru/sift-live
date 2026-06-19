@@ -16,12 +16,16 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  stream    Stream?
-  messages  Message[]
-  sessions  Session[]
+  channel           Channel?
+  moderatedChannels ChannelModerator[]
+  vipChannels       ChannelVip[]
+  bannedChannels    ChannelBan[]
+  followingChannels ChannelFollow[]
+  messages          Message[]
+  sessions          Session[]
 }
 
-model Stream {
+model Channel {
   id        String   @id @default(cuid(2))
   title     String
   category  String?
@@ -32,11 +36,15 @@ model Stream {
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  broadcasts Broadcast[]
+  moderators ChannelModerator[]
+  vips       ChannelVip[]
+  bans       ChannelBan[]
+  followers  ChannelFollow[]
+  streams    Stream[]
   messages   Message[]
 }
 
-model Broadcast {
+model Stream {
   id        String    @id @default(cuid(2))
   title     String
   category  String?
@@ -44,43 +52,102 @@ model Broadcast {
   endedAt   DateTime?
   videoUrl  String?
 
-  streamId String
-  stream   Stream @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  channelId String
+  channel   Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
 
   messages Message[]
 
-  @@index([streamId])
+  @@index([channelId])
 }
 
 model Message {
-  id        String   @id @default(cuid(2))
-  text      String
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid(2))
+  text        String
+  createdAt   DateTime @default(now())
+  deletedAt   DateTime?
+  deletedById String?
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  streamId String
-  stream   Stream @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  channelId String
+  channel   Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
 
-  broadcastId String?
-  broadcast   Broadcast? @relation(fields: [broadcastId], references: [id], onDelete: Cascade)
+  streamId String?
+  stream   Stream? @relation(fields: [streamId], references: [id], onDelete: Cascade)
 
+  @@index([channelId])
   @@index([streamId])
-  @@index([broadcastId])
+  @@index([deletedAt])
 }
 
 model Session {
-  id                String   @id @default(cuid(2))
-  userId            String
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  refreshTokenHash  String   @unique
-  userAgent         String?
-  ip                String?
-  createdAt         DateTime @default(now())
-  expiresAt         DateTime
-  revokedAt         DateTime?
+  id               String   @id @default(cuid(2))
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshTokenHash String   @unique
+  userAgent        String?
+  ip               String?
+  createdAt        DateTime @default(now())
+  expiresAt        DateTime
+  revokedAt        DateTime?
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+model ChannelModerator {
+  id           String   @id @default(cuid(2))
+  channelId    String
+  userId       String
+  assignedAt   DateTime @default(now())
+  assignedById String?
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, userId])
+  @@index([userId])
+}
+
+model ChannelVip {
+  id         String   @id @default(cuid(2))
+  channelId  String
+  userId     String
+  assignedAt DateTime @default(now())
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, userId])
+  @@index([userId])
+}
+
+model ChannelBan {
+  id         String    @id @default(cuid(2))
+  channelId  String
+  userId     String
+  bannedAt   DateTime  @default(now())
+  expiresAt  DateTime?
+  reason     String?
+  bannedById String?
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, userId])
+  @@index([userId])
+}
+
+model ChannelFollow {
+  id         String   @id @default(cuid(2))
+  channelId  String
+  followerId String
+  createdAt  DateTime @default(now())
+
+  channel  Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  follower User    @relation(fields: [followerId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, followerId])
+  @@index([followerId])
 }

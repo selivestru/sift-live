@@ -1,4 +1,5 @@
 export { useAuthStore } from './auth.store'
 export type { AuthState, AuthUser } from './auth.store'
+export { useAuthDialog } from './authDialog.store'
 export { useInitAuth } from './useInitAuth'
 export { useLogout } from './useLogout'

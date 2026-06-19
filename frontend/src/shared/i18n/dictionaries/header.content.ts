@@ -38,6 +38,11 @@ const headerContent = {
       uk: 'Увійти',
       ru: 'Войти',
     }),
+    profile: t({
+      en: 'Profile',
+      uk: 'Профіль',
+      ru: 'Профиль',
+    }),
   },
 } satisfies Dictionary
 
