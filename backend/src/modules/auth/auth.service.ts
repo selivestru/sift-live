@@ -42,7 +42,7 @@ export class AuthService {
 
     const { password: _, ...safeUser } = newUser
 
-    const tokens = await this.signTokens(newUser.id, newUser.email, {})
+    const tokens = await this.signTokens(newUser.id, newUser.email, newUser.username, {})
 
     return { user: safeUser, ...tokens }
   }
@@ -73,7 +73,7 @@ export class AuthService {
     }
 
     const { password: _, ...safeUser } = user
-    const tokens = await this.signTokens(user.id, user.email, clientInfo)
+    const tokens = await this.signTokens(user.id, user.email, user.username, clientInfo)
 
     return { user: safeUser, ...tokens }
   }
@@ -92,7 +92,7 @@ export class AuthService {
 
     const session = await this.prismaService.session.findUnique({
       where: { refreshTokenHash: tokenHash },
-      include: { user: { select: { email: true } } },
+      include: { user: { select: { email: true, username: true } } },
     })
 
     if (!session || session.revokedAt || session.expiresAt < new Date()) {
@@ -104,12 +104,13 @@ export class AuthService {
       data: { revokedAt: new Date() },
     })
 
-    return this.signTokens(session.userId, session.user.email, clientInfo)
+    return this.signTokens(session.userId, session.user.email, session.user.username, clientInfo)
   }
 
   private async signTokens(
     userId: string,
     email: string,
+    username: string,
     context: { userAgent?: string; ip?: string },
   ) {
     const jti = randomUUID()
@@ -120,7 +121,7 @@ export class AuthService {
 
     const [accessToken] = await Promise.all([
       this.jwtService.signAsync(
-        { sub: userId, email, jti },
+        { sub: userId, email, jti, username },
         {
           secret: this.configService.getOrThrow<string>('JWT_ACCESS_SECRET'),
           expiresIn: this.configService.getOrThrow<StringValue>('JWT_ACCESS_TTL'),

@@ -4,6 +4,7 @@ export const CHANNEL_QUERY = graphql(`
   query Channel($username: String!) {
     channel(username: $username) {
       id
+      username
       title
       category
       tags

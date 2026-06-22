@@ -4,15 +4,16 @@ import { useForm } from 'react-hook-form'
 import { useIntlayer } from 'react-intlayer'
 import { useMutation } from 'urql'
 
-import { LOGIN_MUTATION } from '~/features/auth/api/login'
-import type { LoginSchema } from '~/features/auth/model/login.schema'
-import { useLoginSchema } from '~/features/auth/model/useLoginSchema'
 import { useAuthStore } from '~/shared/auth'
 import { Alert, AlertDescription } from '~/shared/ui/Alert'
 import { Button } from '~/shared/ui/Button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '~/shared/ui/Field'
 import { Input } from '~/shared/ui/Input'
 import { PasswordInput } from '~/shared/ui/PasswordInput'
+
+import { LOGIN_MUTATION } from '../api/login'
+import type { LoginSchema } from '../model/login.schema'
+import { useLoginSchema } from '../model/useLoginSchema'
 
 interface LoginFormProps {
   onSuccess?: () => void

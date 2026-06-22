@@ -9,6 +9,7 @@ export const FOLLOWED_CHANNELS_QUERY = graphql(`
       tags
       isLive
       userId
+      username
     }
   }
 `)
@@ -22,6 +23,7 @@ export const LIVE_CHANNELS_QUERY = graphql(`
       tags
       isLive
       userId
+      username
     }
   }
 `)

@@ -1,7 +1,9 @@
 import { Outlet } from '@tanstack/react-router'
+import { useEffect } from 'react'
 import { useIntlayer } from 'react-intlayer'
 
 import { useChannel } from '~/features/channel'
+import { useSocket } from '~/shared/api/socket'
 import { Spinner } from '~/shared/ui/Spinner'
 import { ChatBox } from '~/widgets/ChatBox'
 import { StreamPlayer } from '~/widgets/StreamPlayer'
@@ -16,7 +18,21 @@ interface ChannelPageProps {
 export const ChannelPage = ({ username }: ChannelPageProps) => {
   const t = useIntlayer('channel-page')
 
+  const socket = useSocket()
+
   const channel = useChannel(username)
+
+  useEffect(() => {
+    if (!channel.data || !socket) return
+
+    socket.emit('channel:subscribe', { channelId: channel.data.id })
+
+    return () => {
+      if (channel.data) {
+        socket.emit('channel:unsubscribe', { channelId: channel.data.id })
+      }
+    }
+  }, [channel, socket])
 
   if (channel.error) {
     return (
@@ -50,7 +66,7 @@ export const ChannelPage = ({ username }: ChannelPageProps) => {
       </div>
 
       <aside className="bg-background hidden h-full flex-col border-l lg:flex">
-        <ChatBox username={username} />
+        <ChatBox channelId={channel.data.id} username={username} />
       </aside>
     </div>
   )

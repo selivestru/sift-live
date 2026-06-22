@@ -8,6 +8,7 @@ export const LOGIN_MUTATION = graphql(`
         id
         email
         username
+        color
       }
     }
   }

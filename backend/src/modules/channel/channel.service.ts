@@ -11,7 +11,7 @@ export class ChannelService {
     private readonly userService: UserService,
   ) {}
 
-  async findByUsername(username: string, currentUserId: string): Promise<Channel> {
+  async findByUsername(username: string, currentUserId?: string): Promise<Channel> {
     const user = await this.userService.findByUsername(username)
 
     if (!user) {
@@ -21,7 +21,14 @@ export class ChannelService {
     const channel = await this.prismaService.channel.findUnique({
       where: { userId: user.id },
       omit: { streamKey: true },
-      include: { followers: { where: { followerId: currentUserId }, take: 1 } },
+      include: {
+        followers: {
+          where: {
+            followerId: currentUserId,
+          },
+          take: 1,
+        },
+      },
     })
 
     if (!channel) {
@@ -32,7 +39,8 @@ export class ChannelService {
 
     return {
       ...channelData,
-      isFollowing: followers.length > 0,
+      username: user.username,
+      isFollowing: currentUserId ? followers.length > 0 : false,
     }
   }
 
@@ -45,15 +53,28 @@ export class ChannelService {
           },
         },
       },
-      include: { followers: { where: { followerId: userId }, take: 1 } },
+      include: {
+        user: {
+          select: {
+            username: true,
+          },
+        },
+        followers: {
+          where: {
+            followerId: userId,
+          },
+          take: 1,
+        },
+      },
       omit: { streamKey: true },
     })
 
     const transformedChannels = channels.map((channel) => {
-      const { followers, ...channelData } = channel
+      const { followers, user, ...channelData } = channel
 
       return {
         ...channelData,
+        username: user.username,
         isFollowing: followers.length > 0,
       }
     })
@@ -67,10 +88,18 @@ export class ChannelService {
       omit: { streamKey: true },
       orderBy: { title: 'asc' },
       take: 10,
+      include: {
+        user: {
+          select: {
+            username: true,
+          },
+        },
+      },
     })
 
-    const transformedChannels = channels.map((channel) => ({
+    const transformedChannels = channels.map(({ user, ...channel }) => ({
       ...channel,
+      username: user.username,
       isFollowing: false,
     }))
 
@@ -110,7 +139,7 @@ export class ChannelService {
     }
   }
 
-  async unfollowChannel(
+  async unFollowChannel(
     userId: string,
     channelId: string,
   ): Promise<{ id: string; isFollowing: boolean }> {

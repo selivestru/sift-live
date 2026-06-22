@@ -2,11 +2,9 @@ import { useIntlayer } from 'react-intlayer'
 import { toast } from 'sonner'
 import { useMutation } from 'urql'
 
-import {
-  FOLLOW_CHANNEL_MUTATION,
-  UNFOLLOW_CHANNEL_MUTATION,
-} from '~/features/follow-channel/api/follow-channel.queries'
 import { useAuthDialog, useAuthStore } from '~/shared/auth'
+
+import { FOLLOW_CHANNEL_MUTATION, UNFOLLOW_CHANNEL_MUTATION } from '../api/follow-channel.queries'
 
 interface UseFollowChannelArgs {
   channelId: string

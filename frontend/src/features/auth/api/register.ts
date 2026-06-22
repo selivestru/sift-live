@@ -8,6 +8,7 @@ export const REGISTER_MUTATION = graphql(`
         id
         email
         username
+        color
       }
     }
   }

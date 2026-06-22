@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common'
 
+import { ChannelSubscribeDto } from './dto/channel-subscribe.dto'
+import { MessageSendDto } from './dto/message-send.dto'
+import { AppSocket } from './socket.types'
 import { type Server } from 'socket.io'
 import { RedisService } from '~/modules/redis/redis.service'
+import { PrismaService } from '~/prisma/prisma.service'
 
 const USER_SOCKETS_PREFIX = 'user'
 const PRESENCE_STATUS_KEY = 'presence:status'
@@ -14,7 +18,10 @@ const OFFLINE = 'offline'
 export class SocketService {
   private server?: Server
 
-  constructor(private readonly redisService: RedisService) {}
+  constructor(
+    private readonly redisService: RedisService,
+    private readonly prismaService: PrismaService,
+  ) {}
 
   setServer(server: Server): void {
     this.server = server
@@ -61,6 +68,78 @@ export class SocketService {
 
   async getUserLastSeen(userId: string): Promise<string | null> {
     return this.redisService.hget(PRESENCE_LASTSEEN_KEY, userId)
+  }
+
+  async channelSubscribe(socket: AppSocket, dto: ChannelSubscribeDto): Promise<void> {
+    const user = socket.data.user
+
+    if (!user) {
+      return
+    }
+
+    const channel = await this.prismaService.channel.findUnique({
+      where: { id: dto.channelId },
+      select: { id: true },
+    })
+
+    if (!channel) {
+      return
+    }
+
+    socket.emit('channel:subscribed', { channelId: channel.id })
+
+    await socket.join(`channel:${channel.id}`)
+    await this.redisService.incrementViewerCount(channel.id)
+  }
+
+  async channelUnsubscribe(socket: AppSocket, dto: ChannelSubscribeDto): Promise<void> {
+    const user = socket.data.user
+
+    if (!user) {
+      return
+    }
+
+    socket.emit('channel:unsubscribed', { channelId: dto.channelId })
+
+    await socket.leave(`channel:${dto.channelId}`)
+    await this.redisService.decrementViewerCount(dto.channelId)
+  }
+
+  async messageSend(socket: AppSocket, dto: MessageSendDto): Promise<void> {
+    const { sub: userId, username } = socket.data.user!
+
+    const channel = await this.prismaService.channel.findUnique({
+      where: {
+        id: dto.channelId,
+      },
+      select: { id: true },
+    })
+
+    if (!channel) {
+      return
+    }
+
+    const message = await this.prismaService.message.create({
+      data: {
+        userId,
+        text: dto.text,
+        channelId: channel.id,
+      },
+      include: {
+        user: { select: { color: true } },
+      },
+    })
+
+    const payload = {
+      id: message.id,
+      userId,
+      text: dto.text,
+      channelId: channel.id,
+      username,
+      color: message.user.color,
+    }
+
+    this.server?.to(`channel:${channel.id}`).emit('message:new', payload)
   }
 
   emitToUser(userId: string, event: string, payload: unknown): void {

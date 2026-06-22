@@ -1,14 +1,12 @@
 import { useSyncExternalStore } from 'react'
-import { io } from 'socket.io-client'
+import { io, Socket } from 'socket.io-client'
 
 import { useAuthStore } from '~/shared/auth/auth.store'
 import { env } from '~/shared/config/env'
 
-import type { AppSocket } from './types'
-
-let socket: AppSocket | null = null
+let socket: Socket | null = null
 let lastToken: string | null | undefined = undefined
-let unsubAuth: (() => void) | null = null
+let unSubAuth: (() => void) | null = null
 
 const listeners = new Set<() => void>()
 const notify = () => listeners.forEach((l) => l())
@@ -20,9 +18,9 @@ const subscribe = (cb: () => void) => {
   }
 }
 
-const getSnapshot = (): AppSocket | null => socket
+const getSnapshot = (): Socket | null => socket
 
-const create = (token: string | null): AppSocket => {
+const create = (token: string | null): Socket => {
   const s = io(env.VITE_API_URL, {
     auth: token ? { token } : {},
     withCredentials: true,
@@ -57,16 +55,16 @@ const sync = () => {
 }
 
 export const startSocket = () => {
-  if (unsubAuth) return
+  if (unSubAuth) return
   sync()
-  unsubAuth = useAuthStore.subscribe((state) => {
+  unSubAuth = useAuthStore.subscribe((state) => {
     if (state.token !== lastToken) sync()
   })
 }
 
 export const stopSocket = () => {
-  unsubAuth?.()
-  unsubAuth = null
+  unSubAuth?.()
+  unSubAuth = null
   if (socket) {
     socket.removeAllListeners()
     socket.disconnect()
@@ -76,7 +74,7 @@ export const stopSocket = () => {
   notify()
 }
 
-export const getSocket = (): AppSocket | null => socket
+export const getSocket = (): Socket | null => socket
 
-export const useSocket = (): AppSocket | null =>
+export const useSocket = (): Socket | null =>
   useSyncExternalStore(subscribe, getSnapshot, getSnapshot)

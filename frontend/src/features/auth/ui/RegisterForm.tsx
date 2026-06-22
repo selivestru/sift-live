@@ -4,16 +4,17 @@ import { useForm, useWatch } from 'react-hook-form'
 import { useIntlayer } from 'react-intlayer'
 import { useMutation } from 'urql'
 
-import { REGISTER_MUTATION } from '~/features/auth/api/register'
-import type { RegisterSchema } from '~/features/auth/model/register.schema'
-import { useRegisterSchema } from '~/features/auth/model/useRegisterSchema'
-import { PasswordStrengthIndicator } from '~/features/auth/ui/PasswordStrengthIndicator'
 import { useAuthStore } from '~/shared/auth'
 import { Alert, AlertDescription } from '~/shared/ui/Alert'
 import { Button } from '~/shared/ui/Button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '~/shared/ui/Field'
 import { Input } from '~/shared/ui/Input'
 import { PasswordInput } from '~/shared/ui/PasswordInput'
+
+import { REGISTER_MUTATION } from '../api/register'
+import type { RegisterSchema } from '../model/register.schema'
+import { useRegisterSchema } from '../model/useRegisterSchema'
+import { PasswordStrengthIndicator } from './PasswordStrengthIndicator'
 
 interface RegisterFormProps {
   onSuccess?: () => void

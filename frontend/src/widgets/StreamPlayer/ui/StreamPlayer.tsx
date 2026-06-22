@@ -1,5 +1,4 @@
 import { TvIcon } from 'lucide-react'
-import { useState } from 'react'
 import { useIntlayer } from 'react-intlayer'
 
 import { cn } from '~/shared/lib/utils'
@@ -9,11 +8,8 @@ interface StreamPlayerProps {
   className?: string
 }
 
-export const StreamPlayer = ({ isLive, className }: StreamPlayerProps) => {
+export const StreamPlayer = ({ className }: StreamPlayerProps) => {
   const t = useIntlayer('stream-player')
-
-  const [muted, setMuted] = useState(true)
-  const [playing, setPlaying] = useState(false)
 
   return (
     <div

@@ -1,18 +1,35 @@
+import { useEffect } from 'react'
 import { useQuery } from 'urql'
 
-import { FOLLOWED_CHANNELS_QUERY } from '~/features/channel/api/channel.queries'
 import type { FollowedChannelsQuery } from '~/shared/api/graphql/__generated__/graphql'
 import { useAuthStore } from '~/shared/auth'
+
+import { FOLLOWED_CHANNELS_QUERY } from '../api/channel.queries'
 
 export const useFollowedChannels = () => {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
 
-  const [{ data, fetching, error }] = useQuery({
+  const [{ data, fetching, error }, executeQuery] = useQuery({
     query: FOLLOWED_CHANNELS_QUERY,
-    pause: !isAuthenticated,
+    requestPolicy: 'network-only',
+    pause: true,
   })
 
-  const { onlineChannels, offlineChannels } = (data?.followedChannels ?? []).reduce<{
+  useEffect(() => {
+    if (isAuthenticated) {
+      // executeQuery() // TODO: uncomment
+    }
+  }, [isAuthenticated, executeQuery])
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      executeQuery()
+    }, 15_000)
+
+    return () => clearInterval(intervalId)
+  }, [executeQuery])
+
+  const transformedData = data?.followedChannels?.reduce<{
     onlineChannels: FollowedChannelsQuery['followedChannels']
     offlineChannels: FollowedChannelsQuery['followedChannels']
   }>(
@@ -28,7 +45,7 @@ export const useFollowedChannels = () => {
   )
 
   return {
-    data: { onlineChannels, offlineChannels },
+    data: transformedData,
     fetching,
     error,
   }

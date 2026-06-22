@@ -1,8 +1,9 @@
 import { HeartIcon } from 'lucide-react'
 import { useIntlayer } from 'react-intlayer'
 
-import { useFollowChannel } from '~/features/follow-channel/model/useFollowChannel'
 import { Button } from '~/shared/ui/Button'
+
+import { useFollowChannel } from '../model/useFollowChannel'
 
 interface FollowButtonProps {
   channelId: string

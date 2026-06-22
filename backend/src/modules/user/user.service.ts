@@ -36,4 +36,12 @@ export class UserService {
       },
     })
   }
+
+  async updateUserColor(userId: string, color: string) {
+    return await this.prismaService.user.update({
+      where: { id: userId },
+      data: { color },
+      omit: { password: true },
+    })
+  }
 }

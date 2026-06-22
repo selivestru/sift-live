@@ -13,6 +13,7 @@ model User {
   username  String   @unique
   email     String   @unique
   password  String
+  color     String   @default("#FF6B6B")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -61,9 +62,9 @@ model Stream {
 }
 
 model Message {
-  id          String   @id @default(cuid(2))
+  id          String    @id @default(cuid(2))
   text        String
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
   deletedAt   DateTime?
   deletedById String?
 
@@ -82,13 +83,13 @@ model Message {
 }
 
 model Session {
-  id               String   @id @default(cuid(2))
+  id               String    @id @default(cuid(2))
   userId           String
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  refreshTokenHash String   @unique
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refreshTokenHash String    @unique
   userAgent        String?
   ip               String?
-  createdAt        DateTime @default(now())
+  createdAt        DateTime  @default(now())
   expiresAt        DateTime
   revokedAt        DateTime?
 

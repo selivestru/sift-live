@@ -10,8 +10,8 @@ export const FOLLOW_CHANNEL_MUTATION = graphql(`
 `)
 
 export const UNFOLLOW_CHANNEL_MUTATION = graphql(`
-  mutation UnfollowChannel($channelId: String!) {
-    unfollowChannel(channelId: $channelId) {
+  mutation UnFollowChannel($channelId: String!) {
+    unFollowChannel(channelId: $channelId) {
       id
       isFollowing
     }

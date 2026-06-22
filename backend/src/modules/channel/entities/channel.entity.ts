@@ -22,4 +22,7 @@ export class Channel {
 
   @Field(() => Boolean)
   isFollowing!: boolean
+
+  @Field()
+  username!: string
 }
