@@ -40,7 +40,7 @@ model Channel {
   title     String
   tags      String[] @default([])
   isLive    Boolean  @default(false)
-  streamKey String?
+  streamKey String   @unique
 
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)

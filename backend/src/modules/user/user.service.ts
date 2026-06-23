@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
 
 import { hash } from 'argon2'
+import { randomBytes } from 'node:crypto'
 import { PrismaService } from '~/prisma/prisma.service'
 
 @Injectable()
@@ -42,6 +43,7 @@ export class UserService {
           create: {
             title: `${username}'s channel`,
             categoryId: justChatting.id,
+            streamKey: this.generateStreamKey(),
           },
         },
       },
@@ -54,5 +56,9 @@ export class UserService {
       data: { color },
       omit: { password: true },
     })
+  }
+
+  private generateStreamKey() {
+    return `live_${randomBytes(20).toString('hex')}`
   }
 }
