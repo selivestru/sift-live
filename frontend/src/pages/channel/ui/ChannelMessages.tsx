@@ -26,7 +26,7 @@ export const ChannelMessages = () => {
   }, [socket])
 
   return (
-    <ul ref={listRef} className="flex flex-col gap-2">
+    <ul ref={listRef} className="flex flex-1 flex-col gap-2 overflow-y-auto px-3 py-2">
       {messages.map((message) => (
         <MessageItem key={message.id} message={message} />
       ))}

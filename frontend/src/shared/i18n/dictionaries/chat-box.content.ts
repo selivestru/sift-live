@@ -18,11 +18,6 @@ const chatBoxContent = {
       uk: 'Увійдіть, щоб писати в чат',
       ru: 'Войдите, чтобы писать в чат',
     }),
-    welcomeMessage: t({
-      en: 'Welcome to the chat! Be kind and respect the community rules.',
-      uk: 'Ласкаво просимо до чату! Будьте добрими та поважайте правила спільноти.',
-      ru: 'Добро пожаловать в чат! Будьте добры и уважайте правила сообщества.',
-    }),
     signInButton: t({
       en: 'Sign in',
       uk: 'Увійти',
