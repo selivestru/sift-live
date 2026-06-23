@@ -126,6 +126,7 @@ export const Header = () => {
                     <UserRoundIcon />
                     {t.profile}
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout}>
                     <LogOutIcon />
                     {t.signOut}

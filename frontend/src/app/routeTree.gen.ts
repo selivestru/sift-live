@@ -9,24 +9,36 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as MainRouteImport } from './routes/_main'
-import { Route as ProfileIndexRouteImport } from './routes/profile/index'
 import { Route as MainIndexRouteImport } from './routes/_main/index'
+import { Route as ProfileStreamRouteImport } from './routes/profile/stream'
+import { Route as ProfileAccountRouteImport } from './routes/profile/account'
 import { Route as MainUsernameRouteImport } from './routes/_main/$username'
 
-const MainRoute = MainRouteImport.update({
-  id: '/_main',
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProfileIndexRoute = ProfileIndexRouteImport.update({
-  id: '/profile/',
-  path: '/profile/',
+const MainRoute = MainRouteImport.update({
+  id: '/_main',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MainIndexRoute = MainIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => MainRoute,
+} as any)
+const ProfileStreamRoute = ProfileStreamRouteImport.update({
+  id: '/stream',
+  path: '/stream',
+  getParentRoute: () => ProfileRoute,
+} as any)
+const ProfileAccountRoute = ProfileAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => ProfileRoute,
 } as any)
 const MainUsernameRoute = MainUsernameRouteImport.update({
   id: '/$username',
@@ -36,48 +48,66 @@ const MainUsernameRoute = MainUsernameRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof MainIndexRoute
+  '/profile': typeof ProfileRouteWithChildren
   '/$username': typeof MainUsernameRoute
-  '/profile/': typeof ProfileIndexRoute
+  '/profile/account': typeof ProfileAccountRoute
+  '/profile/stream': typeof ProfileStreamRoute
 }
 export interface FileRoutesByTo {
+  '/profile': typeof ProfileRouteWithChildren
   '/$username': typeof MainUsernameRoute
+  '/profile/account': typeof ProfileAccountRoute
+  '/profile/stream': typeof ProfileStreamRoute
   '/': typeof MainIndexRoute
-  '/profile': typeof ProfileIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_main': typeof MainRouteWithChildren
+  '/profile': typeof ProfileRouteWithChildren
   '/_main/$username': typeof MainUsernameRoute
+  '/profile/account': typeof ProfileAccountRoute
+  '/profile/stream': typeof ProfileStreamRoute
   '/_main/': typeof MainIndexRoute
-  '/profile/': typeof ProfileIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$username' | '/profile/'
+  fullPaths:
+    | '/'
+    | '/profile'
+    | '/$username'
+    | '/profile/account'
+    | '/profile/stream'
   fileRoutesByTo: FileRoutesByTo
-  to: '/$username' | '/' | '/profile'
-  id: '__root__' | '/_main' | '/_main/$username' | '/_main/' | '/profile/'
+  to: '/profile' | '/$username' | '/profile/account' | '/profile/stream' | '/'
+  id:
+    | '__root__'
+    | '/_main'
+    | '/profile'
+    | '/_main/$username'
+    | '/profile/account'
+    | '/profile/stream'
+    | '/_main/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   MainRoute: typeof MainRouteWithChildren
-  ProfileIndexRoute: typeof ProfileIndexRoute
+  ProfileRoute: typeof ProfileRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_main': {
       id: '/_main'
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof MainRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/profile/': {
-      id: '/profile/'
-      path: '/profile'
-      fullPath: '/profile/'
-      preLoaderRoute: typeof ProfileIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_main/': {
@@ -86,6 +116,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof MainIndexRouteImport
       parentRoute: typeof MainRoute
+    }
+    '/profile/stream': {
+      id: '/profile/stream'
+      path: '/stream'
+      fullPath: '/profile/stream'
+      preLoaderRoute: typeof ProfileStreamRouteImport
+      parentRoute: typeof ProfileRoute
+    }
+    '/profile/account': {
+      id: '/profile/account'
+      path: '/account'
+      fullPath: '/profile/account'
+      preLoaderRoute: typeof ProfileAccountRouteImport
+      parentRoute: typeof ProfileRoute
     }
     '/_main/$username': {
       id: '/_main/$username'
@@ -109,9 +153,22 @@ const MainRouteChildren: MainRouteChildren = {
 
 const MainRouteWithChildren = MainRoute._addFileChildren(MainRouteChildren)
 
+interface ProfileRouteChildren {
+  ProfileAccountRoute: typeof ProfileAccountRoute
+  ProfileStreamRoute: typeof ProfileStreamRoute
+}
+
+const ProfileRouteChildren: ProfileRouteChildren = {
+  ProfileAccountRoute: ProfileAccountRoute,
+  ProfileStreamRoute: ProfileStreamRoute,
+}
+
+const ProfileRouteWithChildren =
+  ProfileRoute._addFileChildren(ProfileRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   MainRoute: MainRouteWithChildren,
-  ProfileIndexRoute: ProfileIndexRoute,
+  ProfileRoute: ProfileRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

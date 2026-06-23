@@ -1,1 +1,2 @@
-export * from './ProfilePage'
+export { AccountPage } from './AccountPage'
+export { StreamPage } from './StreamPage'
