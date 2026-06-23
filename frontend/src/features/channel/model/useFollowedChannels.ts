@@ -17,13 +17,13 @@ export const useFollowedChannels = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      // executeQuery() // TODO: uncomment
+      executeQuery()
     }
   }, [isAuthenticated, executeQuery])
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      executeQuery()
+      // executeQuery()
     }, 15_000)
 
     return () => clearInterval(intervalId)

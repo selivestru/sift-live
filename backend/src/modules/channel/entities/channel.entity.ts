@@ -1,5 +1,7 @@
 import { Field, ID, ObjectType } from '@nestjs/graphql'
 
+import { Category } from './category.entity'
+
 @ObjectType()
 export class Channel {
   @Field(() => ID)
@@ -8,8 +10,8 @@ export class Channel {
   @Field()
   title!: string
 
-  @Field(() => String, { nullable: true })
-  category?: string | null
+  @Field(() => Category)
+  category!: Category
 
   @Field(() => [String], { nullable: true })
   tags!: string[]

@@ -26,10 +26,18 @@ model User {
   sessions          Session[]
 }
 
+model Category {
+  id    String  @id @default(cuid(2))
+  title String  @unique
+  slug  String  @unique
+  image String?
+
+  channels Channel[]
+}
+
 model Channel {
   id        String   @id @default(cuid(2))
   title     String
-  category  String?
   tags      String[] @default([])
   isLive    Boolean  @default(false)
   streamKey String?
@@ -37,12 +45,17 @@ model Channel {
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
   moderators ChannelModerator[]
   vips       ChannelVip[]
   bans       ChannelBan[]
   followers  ChannelFollow[]
   streams    Stream[]
   messages   Message[]
+
+  @@index([categoryId])
 }
 
 model Stream {

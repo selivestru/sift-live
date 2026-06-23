@@ -22,6 +22,7 @@ export class ChannelService {
       where: { userId: user.id },
       omit: { streamKey: true },
       include: {
+        category: true,
         followers: {
           where: {
             followerId: currentUserId,
@@ -35,10 +36,11 @@ export class ChannelService {
       throw new NotFoundException('Channel not found')
     }
 
-    const { followers, ...channelData } = channel
+    const { followers, category, ...channelData } = channel
 
     return {
       ...channelData,
+      category,
       username: user.username,
       isFollowing: currentUserId ? followers.length > 0 : false,
     }
@@ -59,6 +61,7 @@ export class ChannelService {
             username: true,
           },
         },
+        category: true,
         followers: {
           where: {
             followerId: userId,
@@ -70,10 +73,11 @@ export class ChannelService {
     })
 
     const transformedChannels = channels.map((channel) => {
-      const { followers, user, ...channelData } = channel
+      const { followers, user, category, ...channelData } = channel
 
       return {
         ...channelData,
+        category,
         username: user.username,
         isFollowing: followers.length > 0,
       }
@@ -94,11 +98,13 @@ export class ChannelService {
             username: true,
           },
         },
+        category: true,
       },
     })
 
-    const transformedChannels = channels.map(({ user, ...channel }) => ({
+    const transformedChannels = channels.map(({ user, category, ...channel }) => ({
       ...channel,
+      category,
       username: user.username,
       isFollowing: false,
     }))

@@ -37,7 +37,7 @@ export const ChannelHeader = ({ username, channel }: ChannelHeaderProps) => {
             </span>
           )}
         </div>
-        {channel.category && <Badge variant="secondary">{channel.category}</Badge>}
+        {channel.category && <Badge variant="secondary">{channel.category.title}</Badge>}
       </div>
     </header>
   )

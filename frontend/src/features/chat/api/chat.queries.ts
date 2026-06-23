@@ -6,7 +6,12 @@ export const CHANNEL_QUERY = graphql(`
       id
       username
       title
-      category
+      category {
+        id
+        title
+        slug
+        image
+      }
       tags
       isLive
       userId

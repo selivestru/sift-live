@@ -22,6 +22,10 @@ export class UserService {
   async create(email: string, password: string, username: string) {
     const hashedPassword = await hash(password)
 
+    const justChatting = await this.prismaService.category.findUniqueOrThrow({
+      where: { title: 'Just Chatting' },
+    })
+
     return await this.prismaService.user.create({
       data: {
         email,
@@ -30,7 +34,7 @@ export class UserService {
         channel: {
           create: {
             title: `${username}'s channel`,
-            category: 'Just Chatting',
+            categoryId: justChatting.id,
           },
         },
       },

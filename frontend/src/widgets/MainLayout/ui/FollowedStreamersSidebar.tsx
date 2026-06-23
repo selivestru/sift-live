@@ -17,29 +17,29 @@ type ActiveChannel = LiveChannelsQuery['liveChannels'][number]
 const initialsOf = (name: string) => name.slice(0, 2).toUpperCase()
 
 const ChannelRow = ({ channel }: { channel: FollowedChannel | ActiveChannel }) => (
-  <li>
+  <li className="h-12">
     <Link
       to="/$username"
       params={{ username: channel.username }}
       preload="intent"
-      className="hover:bg-accent aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors"
+      className="hover:bg-accent aria-[current=page]:bg-accent aria-[current=page]:text-accent-foreground flex h-full items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors"
     >
-      <Avatar size="sm">
+      <Avatar>
         <AvatarFallback>{initialsOf(channel.username)}</AvatarFallback>
       </Avatar>
       <span className="flex min-w-0 flex-1 flex-col">
         <span className="truncate font-medium">{channel.username}</span>
-        <span className="text-muted-foreground truncate text-xs">
-          {channel.category ?? 'No category'}
-        </span>
+        {channel.isLive && (
+          <span className="text-muted-foreground truncate text-xs">{channel.category.title}</span>
+        )}
       </span>
       {channel.isLive ? (
         <span className="text-destructive flex items-center gap-1 text-xs">
           <span className="bg-destructive inline-block size-1.5 rounded-full" />
-          {/*{formatViewers(channel.viewerCount)}*/}0
+          <span>0</span>
         </span>
       ) : (
-        <span className="text-muted-foreground text-xs">Offline</span>
+        <span className="text-muted-foreground font-medium">Offline</span>
       )}
     </Link>
   </li>

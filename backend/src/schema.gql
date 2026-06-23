@@ -7,8 +7,15 @@ type AuthResponse {
   user: User!
 }
 
+type Category {
+  id: ID!
+  image: String
+  slug: String!
+  title: String!
+}
+
 type Channel {
-  category: String
+  category: Category!
   id: ID!
   isFollowing: Boolean!
   isLive: Boolean!
