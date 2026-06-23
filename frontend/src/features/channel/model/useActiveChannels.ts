@@ -11,7 +11,7 @@ export const useActiveChannels = () => {
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      // executeQuery()
+      // executeQuery() // TODO: uncomment
     }, 15_000)
 
     return () => clearInterval(intervalId)

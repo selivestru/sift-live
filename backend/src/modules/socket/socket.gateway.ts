@@ -53,6 +53,7 @@ export class SocketGateway implements OnGatewayInit, OnGatewayConnection, OnGate
 
     if (user) {
       const { isLast } = await this.socketService.userDisconnected(user.sub, client.id)
+      await this.socketService.cleanupChannelRooms(client)
 
       this.logger.log(
         `auth user ${user.sub} disconnected (socket ${client.id})${isLast ? ' [last]' : ''}`,

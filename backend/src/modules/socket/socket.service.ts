@@ -42,6 +42,15 @@ export class SocketService {
     return { count, isFirst }
   }
 
+  async cleanupChannelRooms(socket: AppSocket): Promise<void> {
+    for (const room of socket.rooms) {
+      if (room.startsWith('channel:')) {
+        const channelId = room.slice('channel:'.length)
+        await this.redisService.decrementViewerCount(channelId)
+      }
+    }
+  }
+
   async userDisconnected(
     userId: string,
     socketId: string,
@@ -71,12 +80,6 @@ export class SocketService {
   }
 
   async channelSubscribe(socket: AppSocket, dto: ChannelSubscribeDto): Promise<void> {
-    const user = socket.data.user
-
-    if (!user) {
-      return
-    }
-
     const channel = await this.prismaService.channel.findUnique({
       where: { id: dto.channelId },
       select: { id: true },
@@ -93,12 +96,6 @@ export class SocketService {
   }
 
   async channelUnsubscribe(socket: AppSocket, dto: ChannelSubscribeDto): Promise<void> {
-    const user = socket.data.user
-
-    if (!user) {
-      return
-    }
-
     socket.emit('channel:unsubscribed', { channelId: dto.channelId })
 
     await socket.leave(`channel:${dto.channelId}`)

@@ -2,6 +2,7 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 
 import { UserService } from '../user/user.service'
 import { Channel } from './entities/channel.entity'
+import { Category, Channel as ChannelPrisma } from '~/generated/prisma/client'
 import { PrismaService } from '~/prisma/prisma.service'
 
 @Injectable()
@@ -112,10 +113,7 @@ export class ChannelService {
     return transformedChannels
   }
 
-  async followChannel(
-    userId: string,
-    channelId: string,
-  ): Promise<{ id: string; isFollowing: boolean }> {
+  async followChannel(userId: string, channelId: string): Promise<Channel> {
     const channel = await this.prismaService.channel.findUnique({
       where: { id: channelId },
       include: { followers: { where: { followerId: userId }, take: 1 } },
@@ -135,20 +133,24 @@ export class ChannelService {
       throw new ConflictException('Cannot follow your own channel')
     }
 
-    await this.prismaService.channelFollow.create({
+    const { channel: updatedChannel } = await this.prismaService.channelFollow.create({
       data: { channelId, followerId: userId },
+      include: {
+        channel: {
+          include: {
+            user: {
+              select: { username: true },
+            },
+            category: true,
+          },
+        },
+      },
     })
 
-    return {
-      id: channelId,
-      isFollowing: true,
-    }
+    return this.toChannelEntity(updatedChannel, true)
   }
 
-  async unFollowChannel(
-    userId: string,
-    channelId: string,
-  ): Promise<{ id: string; isFollowing: boolean }> {
+  async unFollowChannel(userId: string, channelId: string): Promise<Channel> {
     const follow = await this.prismaService.channelFollow.findUnique({
       where: { channelId_followerId: { channelId, followerId: userId } },
     })
@@ -157,13 +159,33 @@ export class ChannelService {
       throw new NotFoundException('Follow relationship not found')
     }
 
-    await this.prismaService.channelFollow.delete({
+    const { channel: updatedChannel } = await this.prismaService.channelFollow.delete({
       where: { channelId_followerId: { channelId, followerId: userId } },
+      include: {
+        channel: {
+          include: {
+            user: {
+              select: { username: true },
+            },
+            category: true,
+          },
+        },
+      },
     })
 
+    return this.toChannelEntity(updatedChannel, false)
+  }
+
+  private toChannelEntity(
+    channel: ChannelPrisma & { user: { username: string }; category: Category },
+    isFollowing: boolean,
+  ): Channel {
+    const { user, ...rest } = channel
+
     return {
-      id: channelId,
-      isFollowing: false,
+      ...rest,
+      username: user.username,
+      isFollowing,
     }
   }
 }

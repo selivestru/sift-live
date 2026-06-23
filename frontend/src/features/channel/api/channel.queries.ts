@@ -4,6 +4,7 @@ export const FOLLOWED_CHANNELS_QUERY = graphql(`
   query FollowedChannels {
     followedChannels {
       id
+      username
       title
       category {
         id
@@ -14,7 +15,7 @@ export const FOLLOWED_CHANNELS_QUERY = graphql(`
       tags
       isLive
       userId
-      username
+      isFollowing
     }
   }
 `)
@@ -23,6 +24,7 @@ export const LIVE_CHANNELS_QUERY = graphql(`
   query LiveChannels {
     liveChannels {
       id
+      username
       title
       category {
         id
@@ -33,7 +35,7 @@ export const LIVE_CHANNELS_QUERY = graphql(`
       tags
       isLive
       userId
-      username
+      isFollowing
     }
   }
 `)

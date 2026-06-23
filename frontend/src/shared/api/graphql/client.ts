@@ -3,6 +3,11 @@ import { cacheExchange } from '@urql/exchange-graphcache'
 import { createClient, fetchExchange } from 'urql'
 import z from 'zod'
 
+import {
+  FollowedChannelsDocument,
+  type FollowChannelMutation,
+  type UnFollowChannelMutation,
+} from '~/shared/api/graphql/__generated__/graphql'
 import { REFRESH_MUTATION } from '~/shared/auth/api/refresh'
 import { useAuthStore } from '~/shared/auth/auth.store'
 import { env } from '~/shared/config/env'
@@ -17,7 +22,38 @@ export const client = createClient({
     },
   },
   exchanges: [
-    cacheExchange(),
+    cacheExchange({
+      updates: {
+        Mutation: {
+          followChannel: (result: FollowChannelMutation, _, cache) => {
+            cache.updateQuery({ query: FollowedChannelsDocument }, (data) => {
+              if (!data) return null
+
+              const alreadyExists = data.followedChannels.some(
+                (channel) => channel.id === result.followChannel.id,
+              )
+
+              if (!alreadyExists) {
+                data.followedChannels.push(result.followChannel)
+              }
+
+              return data
+            })
+          },
+          unFollowChannel: (result: UnFollowChannelMutation, _, cache) => {
+            cache.updateQuery({ query: FollowedChannelsDocument }, (data) => {
+              if (!data || data.followedChannels.length === 0) return null
+
+              data.followedChannels = data.followedChannels.filter(
+                (channel) => channel.id !== result.unFollowChannel.id,
+              )
+
+              return data
+            })
+          },
+        },
+      },
+    }),
     authExchange(async (utils) => {
       return {
         addAuthToOperation(operation) {
