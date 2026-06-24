@@ -1,4 +1,5 @@
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo'
+import { HttpModule } from '@nestjs/axios'
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { APP_GUARD } from '@nestjs/core'
@@ -13,6 +14,7 @@ import { AuthGuard } from './modules/auth/guards/auth.guard'
 import { ChannelModule } from './modules/channel/channel.module'
 import { RedisModule } from './modules/redis/redis.module'
 import { SocketModule } from './modules/socket/socket.module'
+import { StreamModule } from './modules/stream/stream.module'
 import { UserModule } from './modules/user/user.module'
 import { PrismaModule } from './prisma/prisma.module'
 import { join } from 'path'
@@ -32,12 +34,16 @@ import { join } from 'path'
       context: ({ req, res }: GqlContext) => ({ req, res }),
     }),
     JwtModule.register({ global: true }),
+    HttpModule.register({
+      global: true,
+    }),
     PrismaModule,
     AuthModule,
     UserModule,
     RedisModule,
     ChannelModule,
     SocketModule,
+    StreamModule,
   ],
   controllers: [],
   providers: [

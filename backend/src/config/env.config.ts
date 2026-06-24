@@ -29,6 +29,8 @@ const envSchema = z.object({
   JWT_ACCESS_AUDIENCE: z.string(),
 
   JWT_REFRESH_TTL: ttlSchema,
+
+  MEDIAMTX_API_URL: z.url(),
 })
 
 export type EnvConfig = z.infer<typeof envSchema>

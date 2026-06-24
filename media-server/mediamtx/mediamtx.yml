@@ -1,0 +1,63 @@
+logLevel: info
+logDestinations: [stdout]
+
+readTimeout: 10s
+writeTimeout: 10s
+
+authMethod: internal
+authInternalUsers:
+  - user: any
+    pass:
+    ips: []
+    permissions:
+      - action: publish
+      - action: read
+      - action: playback
+      - action: api
+      - action: metrics
+      - action: pprof
+
+api: yes
+apiAddress: :9997
+apiAllowOrigins: ["*"]
+
+playback: no
+
+rtmp: yes
+rtmpAddress: :1935
+
+srt: no
+rtmp: no
+webrtc: no
+moq: no
+rtsp: no
+
+hls: yes
+hlsAddress: :8888
+hlsAllowOrigins: ["*"]
+hlsAlwaysRemux: yes
+hlsVariant: lowLatency
+hlsSegmentCount: 7
+hlsSegmentDuration: 2s
+hlsPartDuration: 200ms
+hlsDirectory: /recordings/
+hlsMuxerCloseAfter: 60s
+
+pathDefaults:
+  source: publisher
+  overridePublisher: yes
+  maxReaders: 0
+
+  record: yes
+
+paths:
+  all_others:
+    runOnReady: >
+      curl -X POST "${BACKEND_URL}/api/stream/webhook/stream-ready"
+      -H "Content-Type: application/json"
+      -d "event=stream_started&path=${MTX_PATH}"
+
+    runOnNotReady: >
+      curl -X POST "${BACKEND_URL}/api/stream/webhook/stream-ended" 
+      -H "Content-Type: application/json"
+      -d "event=stream_stopped&path=${MTX_PATH}"

@@ -1,0 +1,45 @@
+services:
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - ./minio/data:/data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  mediamtx:
+    build: ./mediamtx/
+    container_name: mediamtx
+    restart: unless-stopped
+    ports:
+      - "1935:1935" # RTMP
+      - "8888:8888" # HLS playback
+      - "9997:9997" # HTTP API
+    volumes:
+      - ./mediamtx/mediamtx.yml:/mediamtx.yml
+      - ./mediamtx/recordings:/recordings
+    environment:
+      BACKEND_URL: ${BACKEND_URL}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9997/v3/paths/list"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      minio:
+        condition: service_healthy

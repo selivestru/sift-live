@@ -139,6 +139,14 @@ export class SocketService {
     this.server?.to(`channel:${channel.id}`).emit('message:new', payload)
   }
 
+  emitUsersChannelOnline(channelId: string): void {
+    this.server?.to(`channel:${channelId}`).emit('channel:online', { channelId })
+  }
+
+  emitUsersChannelOffline(channelId: string): void {
+    this.server?.to(`channel:${channelId}`).emit('channel:offline', { channelId })
+  }
+
   emitToUser(userId: string, event: string, payload: unknown): void {
     this.server?.to(`user:${userId}`).emit(event, payload)
   }
