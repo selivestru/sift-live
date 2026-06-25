@@ -47,5 +47,5 @@ pathDefaults:
 
 paths:
   all_others:
-    runOnReady: curl "${BACKEND_URL}/api/stream/webhook/stream-connect?path=${MTX_PATH}&query=${MTX_QUERY}"
-    runOnNotReady: curl "${BACKEND_URL}/api/stream/webhook/stream-disconnect?path=${MTX_PATH}&query=${MTX_QUERY}"
+    runOnReady: curl "${BACKEND_URL}/api/stream/webhook/stream-start?path=${MTX_PATH}&query=${MTX_QUERY}"
+    runOnNotReady: curl "${BACKEND_URL}/api/stream/webhook/stream-end?path=${MTX_PATH}&query=${MTX_QUERY}"

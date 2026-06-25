@@ -176,6 +176,76 @@ export class ChannelService {
     return this.toChannelEntity(updatedChannel, false)
   }
 
+  async updateCategory(channelId: string, newCategoryId: string): Promise<Channel> {
+    const channel = await this.prismaService.channel.findUnique({
+      where: { id: channelId },
+      include: { user: { select: { username: true } }, category: true },
+    })
+
+    if (!channel) {
+      throw new NotFoundException('Channel not found')
+    }
+
+    const newCategory = await this.prismaService.category.findUnique({
+      where: { id: newCategoryId },
+    })
+
+    if (!newCategory) {
+      throw new NotFoundException('Category not found')
+    }
+
+    if (channel.categoryId === newCategoryId) {
+      return this.toChannelEntity(channel, false)
+    }
+
+    if (channel.isLive) {
+      await this.rotateStreamCategoryLog(channel.id, newCategoryId, newCategory.title)
+    }
+
+    const updatedChannel = await this.prismaService.channel.update({
+      where: { id: channelId },
+      data: { categoryId: newCategoryId },
+      include: { user: { select: { username: true } }, category: true },
+    })
+
+    return this.toChannelEntity(updatedChannel, false)
+  }
+
+  private async rotateStreamCategoryLog(
+    channelId: string,
+    newCategoryId: string,
+    newCategoryName: string,
+  ): Promise<void> {
+    const activeStream = await this.prismaService.stream.findFirst({
+      where: { channelId, endedAt: null },
+      orderBy: { startedAt: 'desc' },
+    })
+
+    if (!activeStream) return
+
+    const now = new Date()
+
+    const lastLog = await this.prismaService.streamCategoryLog.findFirst({
+      where: { streamId: activeStream.id, endedAt: null },
+    })
+
+    if (lastLog) {
+      const duration = Math.round((now.getTime() - lastLog.startedAt.getTime()) / 1000)
+      await this.prismaService.streamCategoryLog.update({
+        where: { id: lastLog.id },
+        data: { endedAt: now, duration },
+      })
+    }
+
+    await this.prismaService.streamCategoryLog.create({
+      data: {
+        streamId: activeStream.id,
+        categoryId: newCategoryId,
+        categoryName: newCategoryName,
+      },
+    })
+  }
+
   private toChannelEntity(
     channel: ChannelPrisma & { user: { username: string }; category: Category },
     isFollowing: boolean,

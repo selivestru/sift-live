@@ -37,6 +37,7 @@ type Mutation {
   refresh: RefreshResponse!
   register(input: RegisterInput!): AuthResponse!
   unFollowChannel(channelId: String!): Channel!
+  updateChannelCategory(categoryId: String!, channelId: String!): Channel!
   updateUserColor(input: UpdateUserColorInput!): User!
 }
 

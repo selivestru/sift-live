@@ -1,7 +1,8 @@
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo'
 import { HttpModule } from '@nestjs/axios'
+import { BullModule } from '@nestjs/bullmq'
 import { Module } from '@nestjs/common'
-import { ConfigModule } from '@nestjs/config'
+import { ConfigModule, ConfigService } from '@nestjs/config'
 import { APP_GUARD } from '@nestjs/core'
 import { GraphQLModule } from '@nestjs/graphql'
 import { JwtModule } from '@nestjs/jwt'
@@ -18,6 +19,7 @@ import { StreamModule } from './modules/stream/stream.module'
 import { UserModule } from './modules/user/user.module'
 import { PrismaModule } from './prisma/prisma.module'
 import { join } from 'path'
+import { EnvConfig } from '~/config/env.config'
 
 @Module({
   imports: [
@@ -25,6 +27,14 @@ import { join } from 'path'
       isGlobal: true,
       load: [envConfig],
       envFilePath: '.env',
+    }),
+    BullModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService<EnvConfig>) => ({
+        connection: {
+          url: config.getOrThrow<string>('REDIS_URL'),
+        },
+      }),
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,

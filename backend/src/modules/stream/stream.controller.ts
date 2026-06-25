@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Logger, Post, Query, UnauthorizedException } from '@nestjs/common'
 
 import { SocketService } from '../socket/socket.service'
+import { RecordingReadyDto } from './dto/recording-ready.dto'
 import { StreamAuthDto } from './dto/stream-auth.dto'
 import { StreamWebhookDto } from './dto/stream-webhook.dto'
 import { StreamService } from './stream.service'
@@ -30,55 +31,26 @@ export class StreamController {
     }
 
     this.logger.log(`Successfully authenticated stream by user ${channel.id}`)
-
     return true
   }
 
   @Public()
-  @Get('webhook/stream-connect')
-  async streamConnect(@Query() query: StreamWebhookDto) {
+  @Get('webhook/stream-start')
+  async streamStart(@Query() query: StreamWebhookDto) {
     const streamKey = query.path.split('/')[1]
-
-    const channel = await this.prismaService.channel.findFirst({
-      where: { streamKey },
-      select: { id: true },
-    })
-
-    if (!channel) {
-      throw new UnauthorizedException('Invalid stream key')
-    }
-
-    await this.prismaService.channel.update({
-      where: { id: channel.id },
-      data: { isLive: true },
-    })
-
-    this.logger.log(`Successfully connected stream by user ${channel.id}`)
-
-    this.socketService.emitUsersChannelOnline(channel.id)
+    await this.streamService.handleStreamStart(streamKey)
   }
 
   @Public()
-  @Get('webhook/stream-disconnect')
-  async streamDisconnect(@Query() query: StreamWebhookDto) {
+  @Get('webhook/stream-end')
+  async streamEnd(@Query() query: StreamWebhookDto) {
     const streamKey = query.path.split('/')[1]
+    await this.streamService.handleStreamEnd(streamKey)
+  }
 
-    const channel = await this.prismaService.channel.findFirst({
-      where: { streamKey },
-      select: { id: true },
-    })
-
-    if (!channel) {
-      throw new UnauthorizedException('Invalid stream key')
-    }
-
-    await this.prismaService.channel.update({
-      where: { id: channel.id },
-      data: { isLive: false },
-    })
-
-    this.logger.log(`Successfully disconnected stream by user ${channel.id}`)
-
-    this.socketService.emitUsersChannelOffline(channel.id)
+  @Public()
+  @Post('webhook/recording-ready')
+  async recordingReady(@Body() body: RecordingReadyDto) {
+    await this.streamService.handleRecordingReady(body)
   }
 }

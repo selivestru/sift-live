@@ -32,7 +32,8 @@ model Category {
   slug  String  @unique
   image String?
 
-  channels Channel[]
+  channels         Channel[]
+  streamCategoryLogs StreamCategoryLog[]
 }
 
 model Channel {
@@ -61,17 +62,34 @@ model Channel {
 model Stream {
   id        String    @id @default(cuid(2))
   title     String
-  category  String?
   startedAt DateTime  @default(now())
   endedAt   DateTime?
+  duration  Int?
   videoUrl  String?
+  posterUrl String?
 
   channelId String
   channel   Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
 
-  messages Message[]
+  categoryLogs StreamCategoryLog[]
+  messages     Message[]
 
   @@index([channelId])
+}
+
+model StreamCategoryLog {
+  id           String   @id @default(cuid(2))
+  categoryName String
+  startedAt    DateTime @default(now())
+  endedAt      DateTime?
+  duration     Int?
+
+  streamId   String
+  categoryId String
+  stream     Stream   @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@index([streamId])
 }
 
 model Message {

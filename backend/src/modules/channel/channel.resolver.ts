@@ -38,4 +38,13 @@ export class ChannelResolver {
   unFollowChannel(@CurrentUser('sub') userId: string, @Args('channelId') channelId: string) {
     return this.channelService.unFollowChannel(userId, channelId)
   }
+
+  @Mutation(() => Channel)
+  updateChannelCategory(
+    @CurrentUser('sub') _userId: string,
+    @Args('channelId') channelId: string,
+    @Args('categoryId') categoryId: string,
+  ) {
+    return this.channelService.updateCategory(channelId, categoryId)
+  }
 }

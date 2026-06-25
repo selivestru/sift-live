@@ -31,6 +31,15 @@ const envSchema = z.object({
   JWT_REFRESH_TTL: ttlSchema,
 
   MEDIAMTX_API_URL: z.url(),
+
+  MINIO_ENDPOINT: z.url(),
+  MINIO_ACCESS_KEY: z.string(),
+  MINIO_SECRET_KEY: z.string(),
+  MINIO_BUCKET: z.string(),
+  MINIO_PUBLIC_URL: z.url(),
+
+  RECORDINGS_HOST_PATH: z.string(),
+  TRANSCODER_URL: z.url(),
 })
 
 export type EnvConfig = z.infer<typeof envSchema>
