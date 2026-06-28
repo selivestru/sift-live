@@ -1,4 +1,3 @@
-import { HttpService } from '@nestjs/axios'
 import { Processor, WorkerHost } from '@nestjs/bullmq'
 import { Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
@@ -7,6 +6,7 @@ import { Job } from 'bullmq'
 import { readdir, rm, stat } from 'node:fs/promises'
 import { join } from 'node:path'
 import { EnvConfig } from '~/config/env.config'
+import { TranscoderService } from '~/modules/transcoder/transcoder.service'
 import { PrismaService } from '~/prisma/prisma.service'
 
 const QUEUE_NAME = 'stream-processing'
@@ -22,7 +22,7 @@ export class StreamProcessingConsumer extends WorkerHost {
 
   constructor(
     private readonly prismaService: PrismaService,
-    private readonly httpService: HttpService,
+    private readonly transcoderService: TranscoderService,
     private readonly configService: ConfigService<EnvConfig>,
   ) {
     super()
@@ -32,7 +32,7 @@ export class StreamProcessingConsumer extends WorkerHost {
     const { channelId, username } = job.data
 
     try {
-      await this.findAndSendToTranscoder(channelId, username)
+      await this.processRecording(channelId, username)
     } catch (error: unknown) {
       const maxAttempts = job.opts.attempts ?? 3
 
@@ -47,9 +47,8 @@ export class StreamProcessingConsumer extends WorkerHost {
     }
   }
 
-  private async findAndSendToTranscoder(channelId: string, username: string): Promise<void> {
+  private async processRecording(channelId: string, username: string): Promise<void> {
     const recordingsHostPath = this.configService.getOrThrow<string>('RECORDINGS_HOST_PATH')
-    const transcoderUrl = this.configService.getOrThrow<string>('TRANSCODER_URL')
 
     const stream = await this.prismaService.stream.findFirst({
       where: { channelId, endedAt: null },
@@ -78,16 +77,28 @@ export class StreamProcessingConsumer extends WorkerHost {
     )
 
     const latestFile = fileStats.sort((a, b) => b.mtime - a.mtime)[0]
+    const recordingPath = join(recordingsHostPath, username, latestFile.name)
 
-    const containerPath = `/recordings/${username}/${latestFile.name}`
+    this.logger.log(`Processing recording: ${recordingPath}`)
 
-    this.logger.log(`Sending recording to transcoder: ${containerPath}`)
-
-    await this.httpService.axiosRef.post(`${transcoderUrl}/convert`, {
-      recordingPath: containerPath,
-      streamId: stream.id,
+    const { duration, posterUrl } = await this.transcoderService.processRecording(
+      recordingPath,
+      stream.id,
       channelId,
+    )
+
+    const publicUrl = this.configService.getOrThrow<string>('MINIO_PUBLIC_URL')
+    const bucket = this.configService.getOrThrow<string>('MINIO_BUCKET')
+    const baseUrl = `${publicUrl}/${bucket}/${channelId}/${stream.id}`
+    const videoUrl = `${baseUrl}/playlist.m3u8`
+    const fullPosterUrl = posterUrl ? `${publicUrl}/${bucket}/${posterUrl}` : null
+
+    await this.prismaService.stream.update({
+      where: { id: stream.id },
+      data: { endedAt: new Date(), duration, videoUrl, posterUrl: fullPosterUrl },
     })
+
+    this.logger.log(`Recording ready for stream: ${stream.id}, duration: ${String(duration)}s`)
   }
 
   private async cleanupRecording(username: string): Promise<void> {

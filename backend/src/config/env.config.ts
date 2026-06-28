@@ -39,7 +39,6 @@ const envSchema = z.object({
   MINIO_PUBLIC_URL: z.url(),
 
   RECORDINGS_HOST_PATH: z.string(),
-  TRANSCODER_URL: z.url(),
 })
 
 export type EnvConfig = z.infer<typeof envSchema>

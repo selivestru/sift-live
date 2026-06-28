@@ -2,3 +2,5 @@
 
 mediamtx/recordings/
 minio/data/
+postgres/data/
+redis/data/
