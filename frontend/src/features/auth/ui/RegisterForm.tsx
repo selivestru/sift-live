@@ -1,8 +1,9 @@
+import { CombinedGraphQLErrors } from '@apollo/client/errors'
+import { useMutation } from '@apollo/client/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { CircleAlertIcon, LockIcon, MailIcon, UserIcon } from 'lucide-react'
 import { useForm, useWatch } from 'react-hook-form'
 import { useIntlayer } from 'react-intlayer'
-import { useMutation } from 'urql'
 
 import { useAuthStore } from '~/shared/auth'
 import { Alert, AlertDescription } from '~/shared/ui/Alert'
@@ -36,7 +37,7 @@ export const RegisterForm = ({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
     resolver: zodResolver(registerSchema),
   })
 
-  const [{ fetching, error }, executeRegister] = useMutation(REGISTER_MUTATION)
+  const [executeRegister, { loading, error }] = useMutation(REGISTER_MUTATION)
 
   const passwordValue = useWatch({
     control,
@@ -45,7 +46,7 @@ export const RegisterForm = ({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
   })
 
   const submit = async (data: RegisterSchema) => {
-    const result = await executeRegister({ input: data })
+    const result = await executeRegister({ variables: { input: data } })
 
     if (result.data?.register) {
       login(result.data.register)
@@ -61,10 +62,10 @@ export const RegisterForm = ({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
         <p className="text-muted-foreground mt-1 text-sm">{t.joinCommunity}</p>
       </div>
 
-      {error?.graphQLErrors?.[0] && (
+      {CombinedGraphQLErrors.is(error) && (
         <Alert variant="destructive" className="mb-4">
           <CircleAlertIcon />
-          <AlertDescription>{error.graphQLErrors[0].message}</AlertDescription>
+          <AlertDescription>{error.errors[0]?.message}</AlertDescription>
         </Alert>
       )}
 
@@ -111,7 +112,7 @@ export const RegisterForm = ({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
         </Field>
       </FieldGroup>
 
-      <Button type="submit" isLoading={fetching} className="mt-4 w-full">
+      <Button type="submit" isLoading={loading} className="mt-4 w-full">
         {t.createAccountButton}
       </Button>
 

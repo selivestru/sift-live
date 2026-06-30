@@ -23,6 +23,7 @@ type Channel {
   title: String!
   userId: String!
   username: String!
+  viewerCount: Int!
 }
 
 input LoginInput {

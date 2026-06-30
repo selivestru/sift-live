@@ -1,10 +1,9 @@
+import { useApolloClient } from '@apollo/client/react'
 import HLS, { ErrorTypes, Events } from 'hls.js'
 import { TvIcon } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useIntlayer } from 'react-intlayer'
-import { useClient } from 'urql'
 
-import { ChannelDocument } from '~/shared/api/graphql/__generated__/graphql'
 import { useSocket } from '~/shared/api/socket'
 import { Spinner } from '~/shared/ui/Spinner'
 
@@ -25,7 +24,7 @@ export const StreamPlayer = ({ isLive, chanelId, username }: StreamPlayerProps) 
 
   const socket = useSocket()
 
-  const client = useClient()
+  const client = useApolloClient()
 
   const [isLoading, setIsLoading] = useState(isLive)
   const [qualities, setQualities] = useState<Quality[]>([])
@@ -40,13 +39,25 @@ export const StreamPlayer = ({ isLive, chanelId, username }: StreamPlayerProps) 
 
     const handleOnline = (payload: { channelId: string }) => {
       if (payload.channelId === chanelId) {
-        client.query(ChannelDocument, { username }, { requestPolicy: 'network-only' }).toPromise()
+        client.cache.modify({
+          id: client.cache.identify({ __typename: 'Channel', id: chanelId }),
+          fields: {
+            isLive: () => true,
+            viewerCount: () => 0,
+          },
+        })
       }
     }
 
     const handleOffline = (payload: { channelId: string }) => {
       if (payload.channelId === chanelId) {
-        client.query(ChannelDocument, { username }, { requestPolicy: 'network-only' }).toPromise()
+        client.cache.modify({
+          id: client.cache.identify({ __typename: 'Channel', id: chanelId }),
+          fields: {
+            isLive: () => false,
+            viewerCount: () => 0,
+          },
+        })
       }
     }
 
@@ -60,6 +71,10 @@ export const StreamPlayer = ({ isLive, chanelId, username }: StreamPlayerProps) 
   }, [chanelId, username, socket, client])
 
   useEffect(() => {
+    const isTest = true
+
+    if (isTest) return
+
     if (!isLive) return
 
     const video = videoRef.current
@@ -68,6 +83,7 @@ export const StreamPlayer = ({ isLive, chanelId, username }: StreamPlayerProps) 
 
     const src = `http://localhost:8888/${username}/index.m3u8`
 
+    // oxlint-disable-next-line import/no-named-as-default-member
     if (HLS.isSupported()) {
       const hls = new HLS({ lowLatencyMode: true })
 

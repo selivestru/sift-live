@@ -4,6 +4,7 @@ import { UserService } from '../user/user.service'
 import { Channel } from './entities/channel.entity'
 import { StreamKey } from './entities/stream-key.entity'
 import { Category, Channel as ChannelPrisma } from '~/generated/prisma/client'
+import { RedisService } from '~/modules/redis/redis.service'
 import { PrismaService } from '~/prisma/prisma.service'
 
 @Injectable()
@@ -11,6 +12,7 @@ export class ChannelService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly userService: UserService,
+    private readonly redisService: RedisService,
   ) {}
 
   async findByUsername(username: string, currentUserId?: string): Promise<Channel> {
@@ -45,12 +47,16 @@ export class ChannelService {
       category,
       username: user.username,
       isFollowing: currentUserId ? followers.length > 0 : false,
+      viewerCount: channel.isLive ? await this.redisService.getViewerCount(channel.id) : 0,
     }
   }
 
   async getFollowedChannels(userId: string): Promise<Channel[]> {
     const channels = await this.prismaService.channel.findMany({
       where: {
+        userId: {
+          not: userId,
+        },
         followers: {
           some: {
             followerId: userId,
@@ -74,23 +80,32 @@ export class ChannelService {
       omit: { streamKey: true },
     })
 
-    const transformedChannels = channels.map((channel) => {
-      const { followers, user, category, ...channelData } = channel
+    const transformedChannels = await Promise.all(
+      channels.map(async (channel) => {
+        const { followers, user, category, ...channelData } = channel
 
-      return {
-        ...channelData,
-        category,
-        username: user.username,
-        isFollowing: followers.length > 0,
-      }
-    })
+        return {
+          ...channelData,
+          category,
+          username: user.username,
+          isFollowing: followers.length > 0,
+          viewerCount: channel.isLive ? await this.redisService.getViewerCount(channel.id) : 0,
+        }
+      }),
+    )
 
     return transformedChannels
   }
 
-  async getLiveChannels(): Promise<Channel[]> {
+  async getLiveChannels(userId?: string): Promise<Channel[]> {
     const channels = await this.prismaService.channel.findMany({
-      where: { isLive: true },
+      where: {
+        isLive: true,
+        ...(userId && {
+          userId: { not: userId },
+          followers: { none: { followerId: userId } },
+        }),
+      },
       omit: { streamKey: true },
       orderBy: { title: 'asc' },
       take: 10,
@@ -104,12 +119,15 @@ export class ChannelService {
       },
     })
 
-    const transformedChannels = channels.map(({ user, category, ...channel }) => ({
-      ...channel,
-      category,
-      username: user.username,
-      isFollowing: false,
-    }))
+    const transformedChannels = await Promise.all(
+      channels.map(async ({ user, category, ...channel }) => ({
+        ...channel,
+        category,
+        username: user.username,
+        isFollowing: false,
+        viewerCount: channel.isLive ? await this.redisService.getViewerCount(channel.id) : 0,
+      })),
+    )
 
     return transformedChannels
   }
@@ -284,16 +302,17 @@ export class ChannelService {
     })
   }
 
-  private toChannelEntity(
+  private async toChannelEntity(
     channel: ChannelPrisma & { user: { username: string }; category: Category },
     isFollowing: boolean,
-  ): Channel {
+  ): Promise<Channel> {
     const { user, ...rest } = channel
 
     return {
       ...rest,
       username: user.username,
       isFollowing,
+      viewerCount: channel.isLive ? await this.redisService.getViewerCount(channel.id) : 0,
     }
   }
 }

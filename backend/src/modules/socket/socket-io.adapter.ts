@@ -27,6 +27,7 @@ export class SocketIoAdapter extends IoAdapter {
     }) as Server
 
     const authMiddleware = this.app.get(WsAuthMiddleware)
+
     server.use((socket: AppSocket, next) => {
       authMiddleware.verify(socket, next)
     })

@@ -8,11 +8,6 @@ import { RedisService } from '~/modules/redis/redis.service'
 import { PrismaService } from '~/prisma/prisma.service'
 
 const USER_SOCKETS_PREFIX = 'user'
-const PRESENCE_STATUS_KEY = 'presence:status'
-const PRESENCE_LASTSEEN_KEY = 'presence:lastseen'
-
-const ONLINE = 'online'
-const OFFLINE = 'offline'
 
 @Injectable()
 export class SocketService {
@@ -35,15 +30,11 @@ export class SocketService {
     const count = await this.redisService.scard(this.userSocketsKey(userId))
     const isFirst = count === 1
 
-    if (isFirst) {
-      await this.redisService.hset(PRESENCE_STATUS_KEY, userId, ONLINE)
-    }
-
     return { count, isFirst }
   }
 
-  async cleanupChannelRooms(socket: AppSocket): Promise<void> {
-    for (const room of socket.rooms) {
+  async cleanupChannelRooms(rooms: string[]): Promise<void> {
+    for (const room of rooms) {
       if (room.startsWith('channel:')) {
         const channelId = room.slice('channel:'.length)
         await this.redisService.decrementViewerCount(channelId)
@@ -59,24 +50,7 @@ export class SocketService {
     const count = await this.redisService.scard(this.userSocketsKey(userId))
     const isLast = count === 0
 
-    if (isLast) {
-      await this.redisService.hset(PRESENCE_STATUS_KEY, userId, OFFLINE)
-      await this.redisService.hset(PRESENCE_LASTSEEN_KEY, userId, Date.now().toString())
-    }
-
     return { count, isLast }
-  }
-
-  async getUserSocketCount(userId: string): Promise<number> {
-    return this.redisService.scard(this.userSocketsKey(userId))
-  }
-
-  async getUserStatus(userId: string): Promise<string | null> {
-    return this.redisService.hget(PRESENCE_STATUS_KEY, userId)
-  }
-
-  async getUserLastSeen(userId: string): Promise<string | null> {
-    return this.redisService.hget(PRESENCE_LASTSEEN_KEY, userId)
   }
 
   async channelSubscribe(socket: AppSocket, dto: ChannelSubscribeDto): Promise<void> {
@@ -139,12 +113,30 @@ export class SocketService {
     this.server?.to(`channel:${channel.id}`).emit('message:new', payload)
   }
 
-  emitUsersChannelOnline(channelId: string): void {
+  async emitUsersChannelOnline(channelId: string): Promise<void> {
     this.server?.to(`channel:${channelId}`).emit('channel:online', { channelId })
+
+    const followers = await this.prismaService.channelFollow.findMany({
+      where: { channelId },
+      select: { followerId: true },
+    })
+
+    for (const follower of followers) {
+      this.server?.to(`user:${follower.followerId}`).emit('channel:online', { channelId })
+    }
   }
 
-  emitUsersChannelOffline(channelId: string): void {
+  async emitUsersChannelOffline(channelId: string): Promise<void> {
     this.server?.to(`channel:${channelId}`).emit('channel:offline', { channelId })
+
+    const followers = await this.prismaService.channelFollow.findMany({
+      where: { channelId },
+      select: { followerId: true },
+    })
+
+    for (const follower of followers) {
+      this.server?.to(`user:${follower.followerId}`).emit('channel:offline', { channelId })
+    }
   }
 
   emitToUser(userId: string, event: string, payload: unknown): void {

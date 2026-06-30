@@ -1,8 +1,9 @@
+import { CombinedGraphQLErrors } from '@apollo/client/errors'
+import { useMutation } from '@apollo/client/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { CircleAlertIcon, LockIcon, MailIcon } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { useIntlayer } from 'react-intlayer'
-import { useMutation } from 'urql'
 
 import { useAuthStore } from '~/shared/auth'
 import { Alert, AlertDescription } from '~/shared/ui/Alert'
@@ -34,10 +35,10 @@ export const LoginForm = ({ onSuccess, onSwitchToRegister }: LoginFormProps) => 
     resolver: zodResolver(loginSchema),
   })
 
-  const [{ fetching, error }, executeLogin] = useMutation(LOGIN_MUTATION)
+  const [executeLogin, { loading, error }] = useMutation(LOGIN_MUTATION)
 
   const submit = async (data: LoginSchema) => {
-    const result = await executeLogin({ input: data })
+    const result = await executeLogin({ variables: { input: data } })
 
     if (result.data?.login) {
       login(result.data.login)
@@ -53,10 +54,10 @@ export const LoginForm = ({ onSuccess, onSwitchToRegister }: LoginFormProps) => 
         <p className="text-muted-foreground mt-1 text-sm">{t.signInToContinue}</p>
       </div>
 
-      {error?.graphQLErrors?.[0] && (
+      {CombinedGraphQLErrors.is(error) && (
         <Alert variant="destructive" className="mb-4">
           <CircleAlertIcon />
-          <AlertDescription>{error.graphQLErrors[0].message}</AlertDescription>
+          <AlertDescription>{error.errors[0]?.message}</AlertDescription>
         </Alert>
       )}
 
@@ -89,7 +90,7 @@ export const LoginForm = ({ onSuccess, onSwitchToRegister }: LoginFormProps) => 
         </Field>
       </FieldGroup>
 
-      <Button type="submit" isLoading={fetching} className="mt-4 w-full">
+      <Button type="submit" isLoading={loading} className="mt-4 w-full">
         {t.signInButton}
       </Button>
 

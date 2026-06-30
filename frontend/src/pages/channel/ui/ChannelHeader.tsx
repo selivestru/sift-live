@@ -1,3 +1,5 @@
+import { UserIcon } from 'lucide-react'
+
 import { FollowButton } from '~/features/follow-channel'
 import type { ChannelQuery } from '~/shared/api/graphql/__generated__/graphql'
 import { useAuthStore } from '~/shared/auth'
@@ -12,8 +14,8 @@ interface ChannelHeaderProps {
 }
 
 export const ChannelHeader = ({ username, channel }: ChannelHeaderProps) => {
-  const user = useAuthStore((s) => s.user)
-  const isOwnChannel = user?.id === channel.userId
+  const currentUserId = useAuthStore((s) => s.user?.id)
+  const isOwnChannel = currentUserId === channel.userId
 
   return (
     <header className="flex flex-wrap items-center gap-3">
@@ -22,7 +24,7 @@ export const ChannelHeader = ({ username, channel }: ChannelHeaderProps) => {
       </Avatar>
 
       <div className="flex flex-1 flex-col gap-1">
-        <div className="flex items-end justify-between gap-2">
+        <div className="mb-1 flex items-end justify-between gap-2">
           <h1 className="truncate text-lg font-semibold">{username}</h1>
           {!isOwnChannel && (
             <FollowButton channelId={channel.id} isFollowing={channel.isFollowing} />
@@ -31,10 +33,10 @@ export const ChannelHeader = ({ username, channel }: ChannelHeaderProps) => {
         <div className="flex items-center justify-between gap-2">
           <p className="text-muted-foreground truncate text-sm">{channel.title}</p>
           {channel.isLive && (
-            <span className="text-destructive flex items-center gap-1 text-xs">
-              <span className="bg-destructive inline-block size-1.5 animate-pulse rounded-full" />
-              LIVE
-            </span>
+            <div className="text-destructive flex items-center gap-1 text-sm">
+              <UserIcon className="size-5" />
+              <span className="font-semibold">{channel.viewerCount}</span>
+            </div>
           )}
         </div>
         {channel.category && <Badge variant="secondary">{channel.category.title}</Badge>}

@@ -1,25 +1,15 @@
-import { useEffect } from 'react'
-import { useQuery } from 'urql'
+import { useQuery } from '@apollo/client/react'
 
 import { LIVE_CHANNELS_QUERY } from '../api/channel.queries'
 
 export const useActiveChannels = () => {
-  const [{ data, fetching, error }, executeQuery] = useQuery({
-    query: LIVE_CHANNELS_QUERY,
-    requestPolicy: 'network-only',
+  const { data, loading, error } = useQuery(LIVE_CHANNELS_QUERY, {
+    fetchPolicy: 'network-only',
   })
-
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      // executeQuery() // TODO: uncomment
-    }, 15_000)
-
-    return () => clearInterval(intervalId)
-  }, [executeQuery])
 
   return {
     data: data?.liveChannels,
-    fetching,
+    fetching: loading,
     error,
   }
 }

@@ -32,7 +32,11 @@ export class RedisService extends Redis {
 
   async getViewerCount(channelId: string): Promise<number> {
     const value = await this.get(this.viewerCountKey(channelId))
-    return value ? Number.parseInt(value, 10) : 0
+    return value ? parseInt(value, 10) : 0
+  }
+
+  async resetViewerCount(channelId: string): Promise<void> {
+    await this.del(this.viewerCountKey(channelId))
   }
 
   private viewerCountKey(channelId: string): string {

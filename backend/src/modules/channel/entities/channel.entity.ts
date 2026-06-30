@@ -1,4 +1,4 @@
-import { Field, ID, ObjectType } from '@nestjs/graphql'
+import { Field, ID, Int, ObjectType } from '@nestjs/graphql'
 
 import { Category } from './category.entity'
 
@@ -27,4 +27,7 @@ export class Channel {
 
   @Field()
   username!: string
+
+  @Field(() => Int)
+  viewerCount!: number
 }

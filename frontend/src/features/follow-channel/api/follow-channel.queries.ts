@@ -16,6 +16,7 @@ export const FOLLOW_CHANNEL_MUTATION = graphql(`
       isLive
       userId
       isFollowing
+      viewerCount
     }
   }
 `)
@@ -36,6 +37,7 @@ export const UNFOLLOW_CHANNEL_MUTATION = graphql(`
       isLive
       userId
       isFollowing
+      viewerCount
     }
   }
 `)

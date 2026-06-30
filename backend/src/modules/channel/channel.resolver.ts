@@ -25,9 +25,10 @@ export class ChannelResolver {
   }
 
   @Public()
+  @UseGuards(OptionalAuthGuard)
   @Query(() => [Channel])
-  liveChannels() {
-    return this.channelService.getLiveChannels()
+  liveChannels(@CurrentUser('sub') userId?: string) {
+    return this.channelService.getLiveChannels(userId)
   }
 
   @Mutation(() => Channel)

@@ -37,14 +37,14 @@ export class StreamController {
   @Public()
   @Get('webhook/stream-start')
   async streamStart(@Query() query: StreamWebhookDto) {
-    const streamKey = query.path.split('/')[1]
+    const streamKey = query.query.replace('token=', '')
     await this.streamService.handleStreamStart(streamKey)
   }
 
   @Public()
   @Get('webhook/stream-end')
   async streamEnd(@Query() query: StreamWebhookDto) {
-    const streamKey = query.path.split('/')[1]
+    const streamKey = query.query.replace('token=', '')
     await this.streamService.handleStreamEnd(streamKey)
   }
 

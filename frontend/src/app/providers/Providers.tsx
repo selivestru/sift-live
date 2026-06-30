@@ -3,11 +3,11 @@ import { IntlayerProvider } from 'react-intlayer'
 import { useInitAuth } from '~/shared/auth'
 import { Spinner } from '~/shared/ui/Spinner'
 
+import { ApolloClientProvider } from './ApolloClientProvider'
 import { SocketProvider } from './SocketProvider'
 import { TanstackRouter } from './TanstackRouter'
 import { ThemeProvider } from './ThemeProvider'
 import { Toaster } from './Toaster'
-import { UrqlProvider } from './UrqlProvider'
 
 export const Providers = () => {
   const { isLoading } = useInitAuth()
@@ -18,14 +18,14 @@ export const Providers = () => {
 
   return (
     <SocketProvider>
-      <UrqlProvider>
+      <ApolloClientProvider>
         <IntlayerProvider>
           <ThemeProvider>
             <Toaster />
             <TanstackRouter />
           </ThemeProvider>
         </IntlayerProvider>
-      </UrqlProvider>
+      </ApolloClientProvider>
     </SocketProvider>
   )
 }

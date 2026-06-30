@@ -6,6 +6,12 @@
       "sourceType": "autoskills-registry",
       "computedHash": "bffe3d08cfe92ebad63699f74ce29e35c19850ebfbf474c1463183cfe34d6a09"
     },
+    "apollo-client": {
+      "source": "apollographql/skills",
+      "sourceType": "github",
+      "skillPath": "skills/apollo-client/SKILL.md",
+      "computedHash": "8ed0af80d00a7a41ce838a39979e18dfe66193a9a5c2b5ac66e70bec1f6a16a1"
+    },
     "brainstorming": {
       "source": "obra/superpowers",
       "sourceType": "github",

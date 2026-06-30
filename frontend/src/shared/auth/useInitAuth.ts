@@ -26,7 +26,7 @@ export const useInitAuth = () => {
 
     const init = async () => {
       try {
-        const meResult = await client.query(ME_QUERY, {}).toPromise()
+        const meResult = await client.query({ query: ME_QUERY, fetchPolicy: 'network-only' })
 
         if (meResult.data?.me) {
           setUser(meResult.data.me)

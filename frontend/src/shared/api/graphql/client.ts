@@ -1,102 +1,99 @@
-import { authExchange } from '@urql/exchange-auth'
-import { cacheExchange } from '@urql/exchange-graphcache'
-import { createClient, fetchExchange } from 'urql'
+import { ApolloClient, ApolloLink, HttpLink, InMemoryCache, Observable } from '@apollo/client'
+import { CombinedGraphQLErrors, ServerError } from '@apollo/client/errors'
+import { SetContextLink } from '@apollo/client/link/context'
+import { ErrorLink } from '@apollo/client/link/error'
 import z from 'zod'
 
-import {
-  FollowedChannelsDocument,
-  type FollowChannelMutation,
-  type UnFollowChannelMutation,
-} from '~/shared/api/graphql/__generated__/graphql'
-import { REFRESH_MUTATION } from '~/shared/auth/api/refresh'
 import { useAuthStore } from '~/shared/auth/auth.store'
 import { env } from '~/shared/config/env'
 import { ACCESS_TOKEN_KEY, getStorageItem, setStorageItem } from '~/shared/lib/storage'
 
-export const client = createClient({
-  url: `${env.VITE_API_URL}/graphql`,
-  fetchOptions: {
-    credentials: 'include',
+const REFRESH_OPERATION = `mutation Refresh { refresh { accessToken } }`
+
+const httpLink = new HttpLink({
+  uri: `${env.VITE_API_URL}/graphql`,
+  credentials: 'include',
+})
+
+const authLink = new SetContextLink(({ headers }) => {
+  const token = getStorageItem(ACCESS_TOKEN_KEY, z.string().nullable(), null)
+
+  return {
     headers: {
-      'content-type': 'application/json',
+      ...headers,
+      authorization: token ? `Bearer ${token}` : '',
     },
-  },
-  exchanges: [
-    cacheExchange({
-      updates: {
-        Mutation: {
-          followChannel: (result: FollowChannelMutation, _, cache) => {
-            cache.updateQuery({ query: FollowedChannelsDocument }, (data) => {
-              if (!data) return null
+  }
+})
 
-              const alreadyExists = data.followedChannels.some(
-                (channel) => channel.id === result.followChannel.id,
-              )
+const isUnauthenticated = (error: Error) =>
+  (CombinedGraphQLErrors.is(error) &&
+    error.errors.some((e) => e.extensions?.['code'] === 'UNAUTHENTICATED')) ||
+  (ServerError.is(error) && error.statusCode === 401)
 
-              if (!alreadyExists) {
-                data.followedChannels.push(result.followChannel)
-              }
+const errorLink = new ErrorLink(({ error, operation, forward }) => {
+  if (!isUnauthenticated(error)) return
 
-              return data
-            })
+  if (operation.operationName === 'Logout' || operation.operationName === 'Refresh') return
+
+  return new Observable((observer) => {
+    const currentToken = getStorageItem(ACCESS_TOKEN_KEY, z.string().nullable(), null)
+
+    fetch(`${env.VITE_API_URL}/graphql`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(currentToken ? { Authorization: `Bearer ${currentToken}` } : {}),
+      },
+      credentials: 'include',
+      body: JSON.stringify({ query: REFRESH_OPERATION }),
+    })
+      .then((res) => res.json())
+      .then((result) => {
+        const newToken = result?.data?.refresh?.accessToken
+
+        if (newToken) {
+          setStorageItem(ACCESS_TOKEN_KEY, newToken)
+          useAuthStore.getState().setToken(newToken)
+
+          operation.setContext(({ headers = {} }) => ({
+            headers: {
+              ...headers,
+              authorization: `Bearer ${newToken}`,
+            },
+          }))
+
+          forward(operation).subscribe(observer)
+        } else {
+          useAuthStore.getState().logout()
+          observer.complete()
+        }
+      })
+      .catch(() => {
+        useAuthStore.getState().logout()
+        observer.complete()
+      })
+  })
+})
+
+export const client = new ApolloClient({
+  link: ApolloLink.from([errorLink, authLink.concat(httpLink)]),
+  cache: new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          followedChannels: {
+            merge(_, incoming) {
+              return incoming
+            },
           },
-          unFollowChannel: (result: UnFollowChannelMutation, _, cache) => {
-            cache.updateQuery({ query: FollowedChannelsDocument }, (data) => {
-              if (!data || data.followedChannels.length === 0) return null
-
-              data.followedChannels = data.followedChannels.filter(
-                (channel) => channel.id !== result.unFollowChannel.id,
-              )
-
-              return data
-            })
+          liveChannels: {
+            merge(_, incoming) {
+              return incoming
+            },
           },
         },
       },
-    }),
-    authExchange(async (utils) => {
-      return {
-        addAuthToOperation(operation) {
-          const token = getStorageItem(ACCESS_TOKEN_KEY, z.string().nullable(), null)
-
-          if (!token) return operation
-
-          return utils.appendHeaders(operation, {
-            Authorization: `Bearer ${token}`,
-          })
-        },
-
-        didAuthError(error) {
-          const shouldSkipAuthError = error.graphQLErrors.some(
-            (e) =>
-              Array.isArray(e.path) && (e.path.includes('logout') || e.path.includes('refresh')),
-          )
-
-          if (shouldSkipAuthError) {
-            return false
-          }
-
-          return (
-            error.graphQLErrors.some((e) => e.extensions?.code === 'UNAUTHENTICATED') ||
-            error.response?.status === 401
-          )
-        },
-
-        async refreshAuth() {
-          let token = getStorageItem(ACCESS_TOKEN_KEY, z.string().nullable(), null)
-
-          const result = await utils.mutate(REFRESH_MUTATION, {})
-
-          if (result.data?.refresh?.accessToken) {
-            token = result.data.refresh.accessToken
-            setStorageItem('accessToken', token)
-            useAuthStore.getState().setToken(token!)
-          } else {
-            useAuthStore.getState().logout()
-          }
-        },
-      }
-    }),
-    fetchExchange,
-  ],
+    },
+  }),
 })

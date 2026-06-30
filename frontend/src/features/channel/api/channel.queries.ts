@@ -16,6 +16,7 @@ export const FOLLOWED_CHANNELS_QUERY = graphql(`
       isLive
       userId
       isFollowing
+      viewerCount
     }
   }
 `)
@@ -36,6 +37,7 @@ export const LIVE_CHANNELS_QUERY = graphql(`
       isLive
       userId
       isFollowing
+      viewerCount
     }
   }
 `)

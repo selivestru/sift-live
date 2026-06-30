@@ -1,4 +1,4 @@
-import { graphql } from '~/shared/api/graphql/__generated__/gql'
+import { graphql } from '~/shared/api/graphql'
 
 export const ME_QUERY = graphql(`
   query Me {
