@@ -58,7 +58,7 @@ export class UserService {
     })
   }
 
-  private generateStreamKey() {
+  generateStreamKey() {
     return `live_${randomBytes(20).toString('hex')}`
   }
 }

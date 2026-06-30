@@ -18,6 +18,9 @@ const buttonVariants = cva(
           'hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50',
         destructive:
           'bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40',
+        success: 'bg-success text-success-foreground hover:bg-success/90 active:bg-success/90',
+        error:
+          'bg-destructive text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/90',
         link: 'text-primary underline-offset-4 hover:underline',
       },
       size: {
@@ -61,7 +64,7 @@ export const Button = ({
     disabled={isLoading || props.disabled}
     {...props}
   >
-    {isLoading && <Spinner />}
+    {isLoading && <Spinner className="size-4" />}
     {isIconOnly ? (
       <span className="flex size-4 items-center justify-center">{children}</span>
     ) : (

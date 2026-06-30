@@ -4,6 +4,7 @@ import { Args, Mutation, Query, Resolver } from '@nestjs/graphql'
 import { CurrentUser } from '../auth/decorators/current-user.decorator'
 import { ChannelService } from './channel.service'
 import { Channel } from './entities/channel.entity'
+import { StreamKey } from './entities/stream-key.entity'
 import { OptionalAuthGuard } from '~/common/decorators/optional-auth.guard'
 import { Public } from '~/common/decorators/public.decorator'
 
@@ -46,5 +47,15 @@ export class ChannelResolver {
     @Args('categoryId') categoryId: string,
   ) {
     return this.channelService.updateCategory(channelId, categoryId)
+  }
+
+  @Query(() => StreamKey)
+  streamKey(@CurrentUser('sub') userId: string) {
+    return this.channelService.getStreamKey(userId)
+  }
+
+  @Mutation(() => StreamKey)
+  resetStreamKey(@CurrentUser('sub') userId: string) {
+    return this.channelService.resetStreamKey(userId)
   }
 }

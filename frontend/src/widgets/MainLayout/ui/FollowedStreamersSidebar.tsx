@@ -45,15 +45,6 @@ const ChannelRow = ({ channel }: { channel: FollowedChannel | ActiveChannel }) =
   </li>
 )
 
-const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <section>
-    <h3 className="text-muted-foreground px-2 py-1 text-xs font-medium tracking-wide uppercase">
-      {title}
-    </h3>
-    <ul className="flex flex-col gap-0.5">{children}</ul>
-  </section>
-)
-
 const BlockHeader = ({ title, icon: Icon }: { title: string; icon: LucideIcon }) => (
   <div className="flex items-center gap-2 px-4 py-3 text-sm font-semibold">
     <Icon className="text-muted-foreground size-4" />
@@ -86,19 +77,19 @@ export const FollowedStreamersSidebar = () => {
               ) : (
                 <nav className="flex flex-col gap-3 px-2 pb-4">
                   {followedChannels.data.onlineChannels.length > 0 && (
-                    <Section title={t.live}>
+                    <ul className="flex flex-col gap-0.5">
                       {followedChannels.data.onlineChannels.map((channel) => (
                         <ChannelRow key={channel.id} channel={channel} />
                       ))}
-                    </Section>
+                    </ul>
                   )}
 
                   {followedChannels.data.offlineChannels.length > 0 && (
-                    <Section title={t.offline}>
+                    <ul className="flex flex-col gap-0.5">
                       {followedChannels.data.offlineChannels.map((channel) => (
                         <ChannelRow key={channel.id} channel={channel} />
                       ))}
-                    </Section>
+                    </ul>
                   )}
                 </nav>
               )}

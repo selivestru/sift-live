@@ -2,6 +2,7 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 
 import { UserService } from '../user/user.service'
 import { Channel } from './entities/channel.entity'
+import { StreamKey } from './entities/stream-key.entity'
 import { Category, Channel as ChannelPrisma } from '~/generated/prisma/client'
 import { PrismaService } from '~/prisma/prisma.service'
 
@@ -209,6 +210,43 @@ export class ChannelService {
     })
 
     return this.toChannelEntity(updatedChannel, false)
+  }
+
+  async getStreamKey(userId: string): Promise<StreamKey> {
+    const channel = await this.prismaService.channel.findUnique({
+      where: { userId },
+    })
+
+    if (!channel) {
+      throw new NotFoundException('Channel not found')
+    }
+
+    return {
+      id: channel.id,
+      streamKey: channel.streamKey,
+    }
+  }
+
+  async resetStreamKey(userId: string): Promise<StreamKey> {
+    const channel = await this.prismaService.channel.findUnique({
+      where: { userId },
+    })
+
+    if (!channel) {
+      throw new NotFoundException('Channel not found')
+    }
+
+    const newStreamKey = this.userService.generateStreamKey()
+
+    await this.prismaService.channel.update({
+      where: { id: channel.id },
+      data: { streamKey: newStreamKey },
+    })
+
+    return {
+      id: channel.id,
+      streamKey: newStreamKey,
+    }
   }
 
   private async rotateStreamCategoryLog(

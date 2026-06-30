@@ -36,6 +36,7 @@ type Mutation {
   logout: Boolean!
   refresh: RefreshResponse!
   register(input: RegisterInput!): AuthResponse!
+  resetStreamKey: StreamKey!
   unFollowChannel(channelId: String!): Channel!
   updateChannelCategory(categoryId: String!, channelId: String!): Channel!
   updateUserColor(input: UpdateUserColorInput!): User!
@@ -47,6 +48,7 @@ type Query {
   liveChannels: [Channel!]!
   me: User!
   public: String!
+  streamKey: StreamKey!
 }
 
 type RefreshResponse {
@@ -57,6 +59,11 @@ input RegisterInput {
   email: String!
   password: String!
   username: String!
+}
+
+type StreamKey {
+  id: ID!
+  streamKey: String!
 }
 
 input UpdateUserColorInput {

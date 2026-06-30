@@ -1,164 +1,144 @@
-import HLS, { ErrorTypes, Events } from "hls.js";
-import { TvIcon } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { useIntlayer } from "react-intlayer";
-import { useClient } from "urql";
+import HLS, { ErrorTypes, Events } from 'hls.js'
+import { TvIcon } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { useIntlayer } from 'react-intlayer'
+import { useClient } from 'urql'
 
-import { ChannelDocument } from "~/shared/api/graphql/__generated__/graphql";
-import { useSocket } from "~/shared/api/socket";
-import { Spinner } from "~/shared/ui/Spinner";
+import { ChannelDocument } from '~/shared/api/graphql/__generated__/graphql'
+import { useSocket } from '~/shared/api/socket'
+import { Spinner } from '~/shared/ui/Spinner'
 
 interface Quality {
-  height: number;
-  bitrate: number;
-  name: string;
+  height: number
+  bitrate: number
+  name: string
 }
 
 interface StreamPlayerProps {
-  isLive: boolean;
-  chanelId: string;
-  username: string;
+  isLive: boolean
+  chanelId: string
+  username: string
 }
 
-export const StreamPlayer = ({
-  isLive,
-  chanelId,
-  username,
-}: StreamPlayerProps) => {
-  const t = useIntlayer("stream-player");
+export const StreamPlayer = ({ isLive, chanelId, username }: StreamPlayerProps) => {
+  const t = useIntlayer('stream-player')
 
-  const socket = useSocket();
+  const socket = useSocket()
 
-  const client = useClient();
+  const client = useClient()
 
-  const [isLoading, setIsLoading] = useState(isLive);
-  const [qualities, setQualities] = useState<Quality[]>([]);
-  const [selectedQuality, setSelectedQuality] = useState<number>(-1);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(isLive)
+  const [qualities, setQualities] = useState<Quality[]>([])
+  const [selectedQuality, setSelectedQuality] = useState<number>(-1)
+  const [error, setError] = useState<string | null>(null)
 
-  const hlsRef = useRef<HLS>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const hlsRef = useRef<HLS>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket) return
 
     const handleOnline = (payload: { channelId: string }) => {
       if (payload.channelId === chanelId) {
-        client
-          .query(
-            ChannelDocument,
-            { username },
-            { requestPolicy: "network-only" },
-          )
-          .toPromise();
+        client.query(ChannelDocument, { username }, { requestPolicy: 'network-only' }).toPromise()
       }
-    };
+    }
 
     const handleOffline = (payload: { channelId: string }) => {
       if (payload.channelId === chanelId) {
-        client
-          .query(
-            ChannelDocument,
-            { username },
-            { requestPolicy: "network-only" },
-          )
-          .toPromise();
+        client.query(ChannelDocument, { username }, { requestPolicy: 'network-only' }).toPromise()
       }
-    };
+    }
 
-    socket.on("channel:online", handleOnline);
-    socket.on("channel:offline", handleOffline);
+    socket.on('channel:online', handleOnline)
+    socket.on('channel:offline', handleOffline)
 
     return () => {
-      socket.off("channel:online", handleOnline);
-      socket.off("channel:offline", handleOffline);
-    };
-  }, [chanelId, username, socket, client]);
+      socket.off('channel:online', handleOnline)
+      socket.off('channel:offline', handleOffline)
+    }
+  }, [chanelId, username, socket, client])
 
   useEffect(() => {
-    if (!isLive) return;
+    if (!isLive) return
 
-    const video = videoRef.current;
+    const video = videoRef.current
 
-    if (!video) return;
+    if (!video) return
 
-    const src = `http://localhost:8888/${username}/index.m3u8`;
+    const src = `http://localhost:8888/${username}/index.m3u8`
 
     if (HLS.isSupported()) {
-      const hls = new HLS({ lowLatencyMode: true });
+      const hls = new HLS({ lowLatencyMode: true })
 
-      hlsRef.current = hls;
+      hlsRef.current = hls
 
-      hls.loadSource(src);
-      hls.attachMedia(video);
+      hls.loadSource(src)
+      hls.attachMedia(video)
 
       hls.on(Events.MANIFEST_PARSED, () => {
-        setIsLoading(false);
+        setIsLoading(false)
 
         const levelQualities = hls.levels.map((level, index) => ({
           height: level.height,
           bitrate: level.bitrate,
           name: level.height ? `${level.height}p` : `Level ${index}`,
           index,
-        }));
+        }))
 
-        setQualities(levelQualities);
+        setQualities(levelQualities)
 
-        console.debug("levelQualities", levelQualities);
+        console.debug('levelQualities', levelQualities)
 
         if (levelQualities.length > 0) {
-          setSelectedQuality(hls.currentLevel);
+          setSelectedQuality(hls.currentLevel)
         }
 
-        video.play().catch(() => {});
-      });
+        video.play().catch(() => {})
+      })
 
       hls.on(Events.ERROR, (_, data) => {
         if (data.fatal) {
           switch (data.type) {
             case ErrorTypes.NETWORK_ERROR:
-              setError("Ошибка сети. Проверьте подключение.");
-              break;
+              setError('Ошибка сети. Проверьте подключение.')
+              break
             case ErrorTypes.MEDIA_ERROR:
-              setError("Ошибка воспроизведения медиа.");
-              break;
+              setError('Ошибка воспроизведения медиа.')
+              break
             default:
-              setError("Ошибка при загрузке видео.");
+              setError('Ошибка при загрузке видео.')
           }
         }
-      });
+      })
 
       const onPlay = () => {
-        const livePos = hls.liveSyncPosition;
+        const livePos = hls.liveSyncPosition
 
-        if (!video || !livePos) return;
+        if (!video || !livePos) return
 
-        video.currentTime = livePos;
-      };
+        video.currentTime = livePos
+      }
 
-      video.addEventListener("play", onPlay);
+      video.addEventListener('play', onPlay)
 
       return () => {
-        hls.destroy();
-        hlsRef.current = null;
+        hls.destroy()
+        hlsRef.current = null
 
-        video.removeEventListener("play", onPlay);
-      };
-    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      video.src = src;
+        video.removeEventListener('play', onPlay)
+      }
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = src
     }
-  }, [username, isLive]);
+  }, [username, isLive])
 
   return (
     <div className="group/player bg-muted relative aspect-video w-full overflow-hidden">
       {isLoading && <Spinner variant="full-absolute" />}
 
       {isLive ? (
-        <video
-          ref={videoRef}
-          className="absolute inset-0 h-full w-full"
-          aria-label="asda"
-        >
+        <video ref={videoRef} className="absolute inset-0 h-full w-full" aria-label="asda">
           <track kind="captions" />
         </video>
       ) : (
@@ -170,5 +150,5 @@ export const StreamPlayer = ({
         </div>
       )}
     </div>
-  );
-};
+  )
+}

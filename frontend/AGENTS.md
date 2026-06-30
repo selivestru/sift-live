@@ -13,7 +13,6 @@ Sift Live — a Twitch-like live streaming service. Frontend part of a monorepo 
 | Language        | TypeScript ~6.0                               |
 | Routing         | @tanstack/react-router                        |
 | GraphQL         | urql                                          |
-| HTTP client     | ky                                            |
 | WebSockets      | socket.io-client                              |
 | UI              | shadcn/ui (Base UI backend) + Tailwind CSS v4 |
 | State           | Zustand                                       |
